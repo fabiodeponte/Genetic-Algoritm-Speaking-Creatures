@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor.SceneManagement;
 
 
-public class GeneticWalkerEnhanced4LegsWithSensors : MonoBehaviour
+public class Insect : MonoBehaviour
 {
     
     public int populationSize;
@@ -51,9 +51,9 @@ public class GeneticWalkerEnhanced4LegsWithSensors : MonoBehaviour
     void Start()
     {
         // parameters
-        populationSize = 20;  // size of the population
-        evaluationTime = 30f; // 30 seconds per generation
-        Time.timeScale = 10f; // accelerates time x10 
+        populationSize = 1;  // size of the population
+        evaluationTime = 300f; // 300 seconds per generation
+        Time.timeScale = 1f;
 
         GenerateInitialPopulation();
     }
@@ -83,85 +83,101 @@ public class GeneticWalkerEnhanced4LegsWithSensors : MonoBehaviour
 
         for (int i = 0; i < populationSize; i++) // for each creature, we generate a genome, meaning a certain combination of feature values
         {
-        force = Random.Range(50f, 300f); // force
-        speed = Random.Range(30f, 70f);  // speed
 
-        // size and shape of the central body
-        a = Random.Range(1f, 2f);
-        b = Random.Range(1f, 2f);
-        c = Random.Range(1f, 2f);
-        bodySize = new Vector3(a, b, c); // default was: (1, 0.4f, 1);
-        
-        // position the leg 1 with respect to the central body
-        a = Random.Range(-0.6f, -0.4f);
-        b = Random.Range(-0.1f, 0.1f);
-        c = Random.Range(-0.6f, -0.4f);
-        //positionLeg1 = new Vector3(a, b, c); // default was: (-0.5f, 0, -0.5f);
-        positionLeg1 = new Vector3(-0.5f, 0, -0.5f);
 
-        // position the leg 2 with respect to the central body
-        a = Random.Range(0.4f, 0.6f);
-        b = Random.Range(-0.1f, 0.1f);
-        c = Random.Range(-0.6f, -0.4f);
-        //positionLeg2 = new Vector3(a, b, c); // default was: (0.5f, 0, -0.5f);
-        positionLeg2 = new Vector3(0.5f, 0, -0.5f);
+            if (i==0) // generation 713        // galoppo
+            {
+                force = 144.7964f;
+                speed = 171.1907f;
+                limitsHipMin = -28.37243f;
+                limitsHipMax = 59.63264f;
+                limitsKneeMin = -72.76945f;
+                limitsKneeMax = 0f;
+                bodySize = new Vector3 (4.45f, 1.07f, 2.77f);
+                positionLeg1 = new Vector3 (-0.72f, 0.00f, -1.07f);
+                positionLeg2 = new Vector3 (0.89f, 0.00f, -0.67f);
+                positionLeg3 = new Vector3 (-0.79f, 0.00f, 0.31f);
+                positionLeg4 = new Vector3 (0.26f, 0.00f, 0.66f);
+                bodyCenterOfMass = new Vector3 (-0.04f, -0.18f, 0.06f);
+                upperLen = 1.741453f;
+                upperWidth = 0.4146942f;
+                upperDepth = 1.263755f;
+                lowerLen = 0.8547196f;
+                lowerWidth = 0.5039697f;
+                lowerDepth = 0.1444479f;
+                bodyMass = 0.9835867f;
+            }
 
-        // position the leg 3 with respect to the central body
-        a = Random.Range(-0.6f, -0.4f);
-        b = Random.Range(-0.1f, 0.1f);
-        c = Random.Range(0.4f, 0.6f);
-        //positionLeg3 = new Vector3(a, b, c); // default was: (-0.5f, 0,  0.5f);
-        positionLeg3 = new Vector3(-0.5f, 0,  0.5f);
+            if (i==1) // generation 853         // sbilenco
+            {
+                force = 161.5651f;
+                speed = 200.8626f;
+                limitsHipMin = -30.16429f;
+                limitsHipMax = 53.61658f;
+                limitsKneeMin = -73.16537f;
+                limitsKneeMax = 0f;
+                bodySize = new Vector3(6.33f, 0.60f, 3.24f);
+                positionLeg1 = new Vector3(-0.80f, 0.00f, -0.99f);
+                positionLeg2 = new Vector3(0.75f, 0.00f, -0.94f);
+                positionLeg3 = new Vector3(-0.77f, 0.00f, 0.48f);
+                positionLeg4 = new Vector3(0.16f, 0.00f, 0.73f);
+                bodyCenterOfMass = new Vector3(-0.03f, -0.13f, 0.06f);
+                upperLen = 4.029487f;
+                upperWidth = 0.50566f;
+                upperDepth = 1.51613f;
+                lowerLen = 0.8920193f;
+                lowerWidth = 0.3546988f;
+                lowerDepth = 0.1299367f;
+                bodyMass = 0.7242252f;
+            }
 
-        // position the leg 4 with respect to the central body
-        a = Random.Range(0.4f, 0.6f);
-        b = Random.Range(-0.1f, 0.1f);
-        c = Random.Range(0.4f, 0.6f);
-        //positionLeg4 = new Vector3(a, b, c); // default was: (0.5f, 0,  0.5f);
-        positionLeg4 = new Vector3(0.5f, 0,  0.5f);
+            if (i==2) // generation 1500           // eplode
+            {
+                force = 159.8491f;
+                speed = 74.08461f;
+                limitsHipMin = -14.30097f;
+                limitsHipMax = 9.05621f;
+                limitsKneeMin = -65.33143f;
+                limitsKneeMax = 0f;
+                bodySize = new Vector3(13.72f, 0.20f, 1.36f);
+                positionLeg1 = new Vector3(-0.54f, 0.00f, -0.72f);
+                positionLeg2 = new Vector3(1.96f, 0.00f, -0.64f);
+                positionLeg3 = new Vector3(-3.27f, 0.00f, 0.44f);
+                positionLeg4 = new Vector3(0.17f, 0.00f, 0.41f);
+                bodyCenterOfMass = new Vector3(-0.02f, -0.21f, 0.12f);
+                upperLen = 2.210491f;
+                upperWidth = 0.3828156f;
+                upperDepth = 0.7657632f;
+                lowerLen = 0.6603064f;
+                lowerWidth = 0.4221073f;
+                lowerDepth = 0.1536982f;
+                bodyMass = 0.1077927f;
+            }
 
-        // position of the center of mass of the main body (the evolutionary process can change it to have a stronger balance)
-        a = Random.Range(-0.2f, 0.2f);
-        b = Random.Range(-0.2f, 0.2f);
-        c = Random.Range(-0.2f, 0.2f);
-        bodyCenterOfMass = new Vector3(a, b, c); // default was: Vector3.zero;
+            if (i==3) // generation 2700            // esplode
+            {
+                force = 58.53562f;
+                speed = 22.14372f;
+                limitsHipMin = -4.498312f;
+                limitsHipMax = 3.02033f;
+                limitsKneeMin = -18.21725f;
+                limitsKneeMax = 0f;
+                bodySize = new Vector3(5.41f, 0.11f, 0.20f);
+                positionLeg1 = new Vector3(-0.20f, 0.00f, -0.58f);
+                positionLeg2 = new Vector3(10.02f, 0.00f, -0.33f);
+                positionLeg3 = new Vector3(-1.29f, 0.00f, 0.13f);
+                positionLeg4 = new Vector3(0.69f, 0.00f, 0.05f);
+                bodyCenterOfMass = new Vector3(-0.01f, -0.02f, 0.07f);
+                upperLen = 0.2677372f;
+                upperWidth = 0.1214893f;
+                upperDepth = 0.3449826f;
+                lowerLen = 0.6414126f;
+                lowerWidth = 0.03772715f;
+                lowerDepth = 0.03912784f;
+                bodyMass = 0.06885628f;
+            } 
 
-        // length of the upper part of the leg
-        upperLen = Random.Range(0.1f, 1f);   // default was: 0.5
 
-        // width of the upper part of the leg
-        upperWidth = Random.Range(0.1f, 1f); // default was: 0.15
-
-        // depth of the upper part of the leg
-        upperDepth = Random.Range(0.1f, 1f); // default was: 0.15
-
-        // length of the lower part of the leg
-        lowerLen = Random.Range(0.1f, 1f);   // default was: 0.5
-
-        // width of the lower part of the leg
-        lowerWidth = Random.Range(0.1f, 1f); // default was: 0.15
-
-        // depth of the lower part of the leg
-        lowerDepth = Random.Range(0.1f, 1f); // default was: 0.15
-
-        // the movement allowed of the length within the hip is a range: this is the MIN
-        //limitsHipMin = Random.Range(-60f, -10f); // default was: -30f;
-        limitsHipMin = -30f;
-
-        // the movement allowed of the length within the hip is a range: this is the MAX
-        //limitsHipMax = Random.Range(10f, 60f); // default was: 30f;
-        limitsHipMax = 30f;
-
-        // the movement allowed of the length within the knee is a range: this is the MIN
-        //limitsKneeMin = Random.Range(-60f, -30f); // default was: -45f;
-        limitsKneeMin = -45f;
-
-        // the movement allowed of the length within the knee is a range: this is the MAX
-        //limitsKneeMax = Random.Range(-15f, 10f); // default was: 0f;
-        limitsKneeMax = 0f;
-
-        // weight of the main body
-        bodyMass = Random.Range(3f, 5f); // default was: 4f;
 
 
 
@@ -198,7 +214,7 @@ public class GeneticWalkerEnhanced4LegsWithSensors : MonoBehaviour
             genomes.Add(genome);
 
             // generate a creature for each genome in the list
-            creature = new WalkerCreatureEnhanced4LegsWithSensors(new Vector3((i % 5) * 10f, 2, (i / 5) * 10f), genome);
+            creature = new WalkerCreatureEnhanced4LegsWithSensors(new Vector3((i % 5) * 10f, 3, (i / 5) * 10f), genome);
             // change to (new Vector3(i * 10f, 2, 0), genome) if you want the creature in a line an not in lines of five elements each
 
             // add the generated creature to the population list
@@ -348,7 +364,7 @@ public class GeneticWalkerEnhanced4LegsWithSensors : MonoBehaviour
         // CREATES THE NEW POPULATION WITH THE LIST OF GENOMES
         for (int i = 0; i < populationSize; i++)
         {
-            var creature = new WalkerCreatureEnhanced4LegsWithSensors(new Vector3((i % 5) * 10f, 2, (i / 5) * 10f), genomes[i]);
+            var creature = new WalkerCreatureEnhanced4LegsWithSensors(new Vector3((i % 5) * 10f, 3, (i / 5) * 10f), genomes[i]);
             // change to (new Vector3(i * 10f, 2, 0), genome) if you want the creature in a line an not in lines of five elements each
 
             // add the generated creature to the population list
