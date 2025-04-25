@@ -2,13 +2,13 @@ using UnityEngine;
 
 public class LightSensorAgent : MonoBehaviour
 {
-    //[Header("Sensor Settings")]
+    [Header("Sensor Settings")]
     public Light targetLight;                    // Assign manually or auto-detect by tag
-    public float detectionRange = 180;           // How far the sensor can detect
-    public float angleSensitivity = 200;         // Max angle to consider the light "visible"
+    public float detectionRange = 200f;           // How far the sensor can detect
+    public float angleSensitivity = 360;         // Max angle to consider the light "visible"
     public LayerMask obstacleMask;               // LayerMask for raycast (obstructions)
 
-    //[Header("Debug")]
+    [Header("Debug")]
     public bool lightDetected;
     public float detectedIntensity;
 

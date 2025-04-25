@@ -1,3 +1,13 @@
+/* =============== DA FARE ADESSO
+inserita una luce e i sensori, orientati nel senso di marcia dell'agente
+adesso bisogna 
+- costruire una nuova scena
+- costruire la rete neurale che collega il sensore della luce al movimento delle gambe
+- mettere i parametri della rete neurale nel genoma, in modo che possa modificarsi con l'evoluzione
+- cambiare la fitness function in modo che tenga conto della distanza dalla luce
+*/
+
+
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
