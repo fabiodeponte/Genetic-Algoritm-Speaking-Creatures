@@ -111,6 +111,7 @@ public class WalkerCreatureEnhanced4LegsWithSensors
         root.name = "CreatureBody";
         root.transform.position = pos;
 
+
         // size of the creature
         root.transform.localScale = bodySize;
         body = root.AddComponent<Rigidbody>();
@@ -123,8 +124,8 @@ public class WalkerCreatureEnhanced4LegsWithSensors
 
         // add the sensor
         sensor = root.AddComponent<LightSensor>();
-        sensor.maxDetectionDistance = 40f;
-        sensor.lightSourceLayer = LayerMask.GetMask("LightSource"); // LightSource is a layer: to be detected, any light must be part of that layer
+        sensor.detectionRange = 200f;
+        sensor.angleSensitivity = 300f;
     }
 
     void CreateLegs()
@@ -170,7 +171,7 @@ public class WalkerCreatureEnhanced4LegsWithSensors
             // ============= CREATE HIPS
             hip = upper.AddComponent<HingeJoint>();
             hip.connectedBody = body;
-            hip.axis = Vector3.forward;
+            hip.axis = Quaternion.Euler(0, 270, 0) * Vector3.forward; // applied rotation to align the legs with the way forward
             hip.anchor = new Vector3(0, 0.5f, 0);
             hip.autoConfigureConnectedAnchor = false;
             hip.connectedAnchor = offsets[i];
@@ -208,7 +209,7 @@ public class WalkerCreatureEnhanced4LegsWithSensors
             // ============= CREATE KNEES
             knee = lower.AddComponent<HingeJoint>();
             knee.connectedBody = upperRb;
-            knee.axis = Vector3.forward;
+            knee.axis = Quaternion.Euler(0, 270, 0) * Vector3.forward; // applied rotation to align the legs with the way forward
             knee.anchor = new Vector3(0, 0.5f, 0);
             knee.autoConfigureConnectedAnchor = false;
             knee.connectedAnchor = new Vector3(0, -0.5f, 0);
@@ -258,7 +259,8 @@ public class WalkerCreatureEnhanced4LegsWithSensors
         Debug.Log($"Distance traveled by creature: {distanceTraveled}");
         */
 
-        SenseLight(); // at each update we update the value of the light sensor as well
+        var a = sensor.SenseLight(); // at each update we update the value of the light sensor as well
+        //if (sensor.SenseLight()==true) sensor.OnDrawGizmosSelected();
     }
 
 
@@ -276,68 +278,131 @@ public class WalkerCreatureEnhanced4LegsWithSensors
         }
 
 
-
-    void SenseLight()
-    {
-        Vector3 origin = root.transform.position + Vector3.up * 0.5f; // put the light slightly above the body
-        Vector3 direction = root.transform.forward;                   // the direction the look at to detect the light
-
-        int lightLayer = LayerMask.GetMask("LightSource");
-
-        Ray ray = new Ray(origin, direction);
-        RaycastHit hit;
-
-// ================================================================================================================================================
-// ========================================== CONTINUA DA QUI: PERCHE' I SENSORI NON VEDONO MAI LA LUCE? ==========================================
-// ================================================================================================================================================
-
-
-        if (Physics.Raycast(ray, out hit, sensor.maxDetectionDistance, lightLayer))
-        {
-            // Normalize the distance: closer light gives higher sensor value
-            lightSensorValue = 1f - (hit.distance / sensor.maxDetectionDistance);
-            Debug.DrawRay(origin, direction * hit.distance, Color.yellow); // visualize the ray
-            Debug.Log($"Light of creature - first IF: {lightSensorValue}");
-        }
-        else
-        {
-            lightSensorValue = 0f;
-            Debug.DrawRay(origin, direction * sensor.maxDetectionDistance, Color.gray); // visualize a failed ray
-            Debug.Log($"Light of creature - second IF: {lightSensorValue}");
-        }
-    }
-
 }
 
 public class LightSensor : MonoBehaviour
 {
-    // distance at which the sensor detects light
-    public float maxDetectionDistance;
+    //[Header("Sensor Settings")]
+    public Light targetLight;              // Assign manually or auto-detect by tag
+    public float detectionRange;           // How far the sensor can detect
+    public float angleSensitivity;         // Max angle to consider the light "visible"
+    public LayerMask obstacleMask;         // LayerMask for raycast (obstructions)
 
-    public LayerMask lightSourceLayer; // Only detects lights on this layer
-    public float detectedLightIntensity;
+    //[Header("Debug")]
+    public bool lightDetected;
+    public float detectedIntensity;
 
-    public void Update()
+    private void Start()
     {
-        RaycastHit hit;
-        Vector3 forward = transform.forward;
-        if (Physics.Raycast(transform.position, forward, out hit, maxDetectionDistance, lightSourceLayer))
+        // Optional: find the light by tag if not set
+        if (targetLight == null)
         {
-            Light light = hit.collider.GetComponent<Light>();
-            if (light != null)
+            GameObject lightObject = GameObject.FindGameObjectWithTag("TargetLight");
+            if (lightObject != null)
             {
-                // You can scale intensity by distance if desired
-                float distance = Vector3.Distance(transform.position, hit.point);
-                detectedLightIntensity = light.intensity / (distance * distance); // crude simulation
-                Debug.Log($"detectedLightIntensity: {detectedLightIntensity}");
+                targetLight = lightObject.GetComponent<Light>();
+            }
+
+        }
+
+        if (targetLight == null)
+        {
+            Debug.LogError("Target Light not assigned or found.");
+        }
+        //Debug.LogError($"Target Light: {targetLight}");
+    }
+
+/*
+    void Update()
+    {
+        Debug.LogError($"SenseLight: {SenseLight()}");
+        if (SenseLight()==true)
+        OnDrawGizmosSelected();
+
+    }
+*/
+
+    public bool SenseLight()
+    {
+        //Vector3 direction = Vector3.forward;
+        //Debug.DrawRay(transform.position, direction * 10, Color.yellow);
+
+        Vector3 origin = transform.position + Vector3.up * 0.5f; // put the light slightly above the body
+        Vector3 direction = transform.forward;                   // the direction the look at to detect the light
+        Debug.DrawRay(origin, direction * 10, Color.gray);
+
+
+        if (targetLight == null)
+        {
+            lightDetected = false;
+            //Debug.LogError("Target Light  = false");
+            return lightDetected;
+        }
+
+        Vector3 toLight = targetLight.transform.position - transform.position;
+        float distanceToLight = toLight.magnitude;
+        float angle = Vector3.Angle(transform.forward, toLight);
+        Debug.LogError($"distanceToLight: {distanceToLight}");
+        Debug.LogError($"detectionRange: {detectionRange}");
+        Debug.LogError($"angleSensitivity: {angleSensitivity}");
+        Debug.LogError($"angle: {angle}");
+
+        // Check if within range
+        if (distanceToLight > detectionRange)
+        {
+            lightDetected = false;
+            Debug.LogError($"1 - distanceToLight > detectionRange");
+            return lightDetected;
+        }
+
+        // Check angle
+        angle = Vector3.Angle(transform.forward, toLight);
+        if (angle > angleSensitivity)
+        {
+            lightDetected = false;
+            Debug.LogError($"2 - angle > angleSensitivity");
+            return lightDetected;
+        }
+
+        // Check line of sight (raycast)
+        if (Physics.Raycast(transform.position, toLight.normalized, out RaycastHit hit, detectionRange, obstacleMask))
+        {
+            if (hit.transform != targetLight.transform)
+            {
+                lightDetected = false;
+                Debug.LogError($"3 - hit.transform != targetLight.transform");
+                return lightDetected;
             }
         }
-        else
+
+        // Calculate light intensity based on distance and angle
+        float intensity = targetLight.intensity *1000 / (1 + distanceToLight);
+        intensity *= Mathf.Cos(angle * Mathf.Deg2Rad); // angle sensitivity
+
+        detectedIntensity = intensity;
+        lightDetected = true;
+
+        Debug.Log($"==================Light detected! angle: {angle}");
+        Debug.Log($"==================Light detected! targetLight.intensity: {targetLight.intensity}");
+        Debug.Log($"==================Light detected! distanceToLight: {distanceToLight}");
+        Debug.Log($"==================Light detected! Intensity: {detectedIntensity}");
+        return lightDetected;
+    }
+
+    public void OnDrawGizmosSelected()
+    {
+        Debug.Log("Drawing Gizmos!");
+        // Visualize detection area
+        Gizmos.color = lightDetected ? Color.green : Color.red;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
+
+        // Show direction to light (if assigned)
+        if (targetLight != null)
         {
-            detectedLightIntensity = 0;
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(transform.position, targetLight.transform.position);
         }
     }
 }
-
 
 

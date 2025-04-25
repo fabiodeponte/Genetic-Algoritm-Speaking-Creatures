@@ -48,6 +48,13 @@ public class GeneticWalkerEnhanced4LegsWithSensors : MonoBehaviour
 
     private WalkerCreatureEnhanced4LegsWithSensors creature;
 
+    public Light targetLight;
+
+
+
+
+
+
     void Start()
     {
         // parameters
@@ -55,6 +62,23 @@ public class GeneticWalkerEnhanced4LegsWithSensors : MonoBehaviour
         evaluationTime = 30f; // 30 seconds per generation
         Time.timeScale = 10f; // accelerates time x10 
 
+
+        populationSize = 4;  // size of the population
+        evaluationTime = 300f; // 30 seconds per generation
+        Time.timeScale = 1f; // accelerates time x10 
+
+        //create a light
+        CreateLight();
+
+        //update the parameters of the light
+        Color lightColor = Color.white;           // Light color
+        float lightIntensity = 25.0f;              // Light intensity
+        float lightRange = 10.0f;
+        Vector3 newPosition = new Vector3(-10, 5, -10);
+        UpdateLightSettings(lightColor, lightIntensity, lightRange, newPosition);
+
+
+        // generate the population
         GenerateInitialPopulation();
     }
 
@@ -400,4 +424,47 @@ public class GeneticWalkerEnhanced4LegsWithSensors : MonoBehaviour
         }
     }
 
+
+
+
+
+    public void CreateLight()
+    {
+        // Create a new GameObject to hold the Light component
+        GameObject lightGameObject = new GameObject("GeneratedLight");
+
+        // Add a Light component to the GameObject
+        targetLight = lightGameObject.AddComponent<Light>();
+        
+        // Set up light properties
+        targetLight.type = LightType.Point;        // Point light
+        lightGameObject.transform.position = new Vector3(0, 5, 0);  // Position of light
+        targetLight.color = Color.white;           // Light color
+        targetLight.intensity = 1.0f;              // Light intensity
+        targetLight.range = 10.0f;                 // Light range
+        targetLight.shadows = LightShadows.Soft;   // Light shadows
+
+        // Tag the GameObject for identification
+        lightGameObject.tag = "TargetLight";       // This is for your sensor logic
+    }
+    
+    public void UpdateLightSettings(Color newColor, float newIntensity, float newRange, Vector3 newPosition)
+    {
+        if (targetLight != null)
+        {
+            targetLight.color = newColor;
+            targetLight.intensity = newIntensity;
+            targetLight.range = newRange;
+            targetLight.transform.position = newPosition;  // Position of light
+        }
+        else
+        {
+            Debug.LogWarning("Target light not set. Cannot update settings.");
+        }
+    }
+
+
 }
+
+
+

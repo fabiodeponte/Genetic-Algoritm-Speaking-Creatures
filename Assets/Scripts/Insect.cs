@@ -76,10 +76,6 @@ public class Insect : MonoBehaviour
 
     void GenerateInitialPopulation()
     {
-        // These are helpful later in dealing with tuple of three values of type Vector3
-        float a = 0;
-        float b = 0;
-        float c = 0;
 
         for (int i = 0; i < populationSize; i++) // for each creature, we generate a genome, meaning a certain combination of feature values
         {
