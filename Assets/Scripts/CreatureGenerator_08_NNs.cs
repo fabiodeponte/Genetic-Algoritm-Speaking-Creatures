@@ -1,7 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class WalkerCreatureEnhanced4LegsWithSensors
+public class CreatureGenerator_08_NNs
+
 {
 
     // =========== DECLARATION OF VARIABLES AND OBJECTS NEEDED IN THE METHODS ===========
@@ -59,18 +60,20 @@ public class WalkerCreatureEnhanced4LegsWithSensors
 
     // phaseOffset offsets the phase of the sinusoidal function used to drive the creature's joints (legs have a cyclical movement): 
     // it changes the intial position, but not the movement of the legs relative to one another
-    private float phaseOffset;
+    // private float phaseOffset;
 
     // the value of the light sensor
-    public float LightSensor_08_NNsValue;
+    public float lightSensorValue;
 
-    private LightSensor_08_NNs sensor;
+    private LightSensor sensor;
+
+    public NeuralNetwork nn;
 
 
-    public WalkerCreatureEnhanced4LegsWithSensors(Vector3 spawnPos, List<object> genome)
+    public CreatureGenerator_08_NNs(Vector3 spawnPos, List<object> genome)
     {
         gravity = 1;
-        phaseOffset = 0;
+        // phaseOffset = 0;
         
         InitialPosition = spawnPos;
         motorForce = (float)genome[0];          // [50 | 300]
@@ -99,6 +102,54 @@ public class WalkerCreatureEnhanced4LegsWithSensors
             //Debug.Log($"lowerLen: {lowerLen} - lowerWidth: {lowerWidth} - lowerDepth: {lowerDepth}");
             //Debug.Log($"genome[14]: {genome[14]} - genome[15]: {genome[15]} - genome[16]: {genome[16]}");
 
+
+if (genome == null)
+{
+    Debug.LogError("Genome list is NULL!");
+}
+else if (genome.Count <= 19)
+{
+    Debug.LogError("Genome list is too short: Count = " + genome.Count);
+}
+else if (genome[19] == null)
+{
+    Debug.LogError("Genome[19] is NULL!");
+}
+else
+{
+    Debug.Log($"Genome[19]: {(Genome)genome[19]}");
+    Debug.Log($"layerSizes: {((Genome)genome[19]).layerSizes}");
+    Debug.Log($"weights: {((Genome)genome[19]).weights}");
+}
+
+
+Genome g = (Genome)genome[19];
+
+for (int layer = 0; layer < g.weights.Length; layer++) // <--- use Length instead of Count
+{
+    float[][] matrix = g.weights[layer];
+    int rows = matrix.Length; // how many "from" neurons
+
+    Debug.Log($"Layer {layer}: {rows} rows");
+
+    for (int i = 0; i < rows; i++)
+    {
+        int cols = matrix[i].Length; // how many "to" neurons
+        string rowText = $"Row {i}: ";
+        for (int j = 0; j < cols; j++)
+        {
+            rowText += matrix[i][j].ToString("F3") + " ";
+        }
+        Debug.Log(rowText);
+    }
+}
+
+
+
+
+        //NeuralNetwork nn01 = new NeuralNetwork((Genome)genome[19]); // creates a neural network with the received genome
+        NeuralNetwork nn = new NeuralNetwork((Genome)genome[19]);
+
         // spawnPos is the initial position where the root body of the creature will be placed when it is created
         CreateBody(spawnPos);
         CreateLegs(); // the position of the legs is then relative to the position of the body
@@ -123,7 +174,7 @@ public class WalkerCreatureEnhanced4LegsWithSensors
         body.mass = bodyMass;
 
         // add the sensor
-        sensor = root.AddComponent<LightSensor_08_NNs>();
+        sensor = root.AddComponent<LightSensor>();
         sensor.detectionRange = 200f;
         sensor.angleSensitivity = 300f;
     }
@@ -223,13 +274,25 @@ public class WalkerCreatureEnhanced4LegsWithSensors
 
     public void UpdateMotion(float time)
     {
+        // Inputs
+        float light_dist = sensor.LightDistance();
+        float light_angle = sensor.LightAngle();
+        float[] inputs = new float[2];
+        inputs[0] = light_dist;
+        inputs[1] = light_angle;
+        distanceTraveled = light_dist;
+
+        // Run the network
+        float[] outputs = nn.FeedForward(inputs);
+        Debug.Log($"outputs.Length: {outputs.Length}");
+
+
+
+        // 3. Apply the results to the legs
         for (int i = 0; i < hips.Count; i++)
         {
-            // 0 and 3 go together, 1 and 2 go together
-            float phase = (i == 0 || i == 3) ? 0f : Mathf.PI;
-
-            // calculate the instant velocity to apply of the hip: it changes over time
-            float velocity = Mathf.Sin(time * 2f + phase + phaseOffset) * motorSpeed;
+            float motorForce = outputs[i * 2];     // First out: force
+            float velocity = outputs[i * 2 + 1]; // Second out: speed
 
             // apply force and velocity to the hip
             var m = hips[i].motor;
@@ -243,21 +306,6 @@ public class WalkerCreatureEnhanced4LegsWithSensors
             km.targetVelocity = -velocity * 0.5f; // goes opposite direction half the speed
             knees[i].motor = km;
         }
-
-        // calculate the distance so far
-        var dist = root.transform.position - InitialPosition;
-        // to get an actual value, we apply Pythagoras
-        float dist_pythagoras = Mathf.Sqrt((dist.x * dist.x) + (dist.z * dist.z));
-        distanceTraveled = dist_pythagoras;
-
-        //DEBUG: printout the calculated distance
-        /*
-        Debug.Log($"Original position (x,y,z): {InitialPosition.x},{InitialPosition.y},{InitialPosition.z}");
-        Debug.Log($"Current position (x,y,z): {root.transform.position.x},{root.transform.position.y},{root.transform.position.z}");
-        Debug.Log($"Distance (x,y,z): {dist.x},{dist.y},{dist.z}");
-        Debug.Log($"Distance: {dist_pytagor}");
-        Debug.Log($"Distance traveled by creature: {distanceTraveled}");
-        */
 
         var a = sensor.SenseLight(); // at each update we update the value of the light sensor as well
         //if (sensor.SenseLight()==true) sensor.OnDrawGizmosSelected();
@@ -280,7 +328,7 @@ public class WalkerCreatureEnhanced4LegsWithSensors
 
 }
 
-public class LightSensor_08_NNs : MonoBehaviour
+public class LightSensor : MonoBehaviour
 {
     //[Header("Sensor Settings")]
     public Light targetLight;              // Assign manually or auto-detect by tag
@@ -321,6 +369,24 @@ public class LightSensor_08_NNs : MonoBehaviour
 
     }
 */
+
+    public float LightDistance()
+    {
+        Vector3 origin = transform.position + Vector3.up * 0.5f; // put the light slightly above the body
+        Vector3 direction = transform.forward;                   // the direction the look at to detect the light
+        Vector3 toLight = targetLight.transform.position - transform.position;
+        float distanceToLight = toLight.magnitude;
+        return distanceToLight;
+    }
+
+    public float LightAngle()
+    {
+        Vector3 origin = transform.position + Vector3.up * 0.5f; // put the light slightly above the body
+        Vector3 direction = transform.forward;                   // the direction the look at to detect the light
+        Vector3 toLight = targetLight.transform.position - transform.position;
+        float angle = Vector3.Angle(transform.forward, toLight);
+        return angle;
+    }
 
     public bool SenseLight()
     {
@@ -406,3 +472,248 @@ public class LightSensor_08_NNs : MonoBehaviour
 }
 
 
+
+public class Genome
+{
+    public int[] layerSizes;
+    public float[][][] weights;
+
+    public Genome(int[] layerSizes, float[][][] weights)
+    {
+        this.layerSizes = layerSizes;
+        this.weights = weights;
+    }
+
+    // Create a new random Genome
+    public static Genome CreateRandomGenome(int numInputs, int numOutputs, int minHiddenLayers = 1, int maxHiddenLayers = 3, int minNeuronsPerLayer = 2, int maxNeuronsPerLayer = 8)
+    {
+        int hiddenLayerCount = UnityEngine.Random.Range(minHiddenLayers, maxHiddenLayers + 1);
+
+        List<int> layers = new List<int>();
+        layers.Add(numInputs); // Input layer
+
+        for (int i = 0; i < hiddenLayerCount; i++)
+        {
+            int neurons = UnityEngine.Random.Range(minNeuronsPerLayer, maxNeuronsPerLayer + 1);
+            layers.Add(neurons);
+        }
+
+        layers.Add(numOutputs); // Output layer
+
+        int[] layerSizes = layers.ToArray();
+
+        float[][][] weights = new float[layerSizes.Length - 1][][];
+
+        for (int i = 0; i < layerSizes.Length - 1; i++)
+        {
+            weights[i] = new float[layerSizes[i + 1]][]; // from layer i to i+1
+
+            for (int j = 0; j < layerSizes[i + 1]; j++)
+            {
+                weights[i][j] = new float[layerSizes[i]];
+                for (int k = 0; k < layerSizes[i]; k++)
+                {
+                    weights[i][j][k] = UnityEngine.Random.Range(-1f, 1f);
+                }
+            }
+        }
+
+        return new Genome(layerSizes, weights);
+    }
+}
+
+public class NeuralNetwork
+{
+    public int[] layerSizes;
+    public float[][] neurons;
+    public float[][][] weights;
+
+    // Constructor from a Genome
+    public NeuralNetwork(Genome genome)
+    {
+        this.layerSizes = (int[])genome.layerSizes.Clone();
+
+        this.neurons = new float[layerSizes.Length][];
+        for (int i = 0; i < layerSizes.Length; i++)
+        {
+            neurons[i] = new float[layerSizes[i]];
+        }
+
+        this.weights = new float[genome.weights.Length][][];
+        for (int i = 0; i < genome.weights.Length; i++)
+        {
+            weights[i] = new float[genome.weights[i].Length][];
+            for (int j = 0; j < genome.weights[i].Length; j++)
+            {
+                weights[i][j] = new float[genome.weights[i][j].Length];
+                for (int k = 0; k < genome.weights[i][j].Length; k++)
+                {
+                    weights[i][j][k] = genome.weights[i][j][k];
+                }
+            }
+        }
+    }
+
+    // Export NeuralNetwork to Genome
+    public Genome ExportToGenome()
+    {
+        int[] exportedLayerSizes = (int[])layerSizes.Clone();
+
+        float[][][] exportedWeights = new float[weights.Length][][];
+
+        for (int i = 0; i < weights.Length; i++)
+        {
+            exportedWeights[i] = new float[weights[i].Length][];
+
+            for (int j = 0; j < weights[i].Length; j++)
+            {
+                exportedWeights[i][j] = new float[weights[i][j].Length];
+                for (int k = 0; k < weights[i][j].Length; k++)
+                {
+                    exportedWeights[i][j][k] = weights[i][j][k];
+                }
+            }
+        }
+
+        return new Genome(exportedLayerSizes, exportedWeights);
+    }
+
+
+
+public float[] FeedForward(float[] inputs)
+{
+    if (inputs == null)
+    {
+        Debug.LogError("FeedForward: inputs is NULL");
+        return null;
+    }
+    
+    if (neurons == null)
+    {
+        Debug.LogError("FeedForward: neurons is NULL");
+        return null;
+    }
+
+    Debug.Log("FeedForward: neurons is initialized");
+    
+    if (weights == null)
+    {
+        Debug.LogError("FeedForward: weights is NULL");
+        return null;
+    }
+    
+    Debug.Log("FeedForward: weights is initialized");
+    
+    if (neurons[0] == null)
+    {
+        Debug.LogError("FeedForward: neurons[0] is NULL");
+        return null;
+    }
+
+    if (inputs.Length != neurons[0].Length)
+    {
+        Debug.LogError($"FeedForward: input length {inputs.Length} does not match input layer size {neurons[0].Length}");
+        return null;
+    }
+
+    // Log input values
+    Debug.Log("FeedForward: inputs = " + string.Join(",", inputs));
+
+    // Set input neurons
+    for (int i = 0; i < inputs.Length; i++)
+    {
+        neurons[0][i] = inputs[i];
+    }
+
+    // Log neurons[0] after setting inputs
+    Debug.Log("FeedForward: neurons[0] after input assignment = " + string.Join(",", neurons[0]));
+
+    // Feed through layers
+    for (int layer = 1; layer < neurons.Length; layer++)
+    {
+        if (neurons[layer] == null)
+        {
+            Debug.LogError($"FeedForward: neurons[{layer}] is NULL");
+            return null;
+        }
+
+        Debug.Log($"FeedForward: Processing layer {layer}");
+
+        for (int neuron = 0; neuron < neurons[layer].Length; neuron++)
+        {
+            if (weights[layer - 1] == null)
+            {
+                Debug.LogError($"FeedForward: weights[{layer - 1}] is NULL");
+                return null;
+            }
+
+            if (weights[layer - 1].Length != neurons[layer - 1].Length)
+            {
+                Debug.LogError($"FeedForward: weights[{layer - 1}] size mismatch for layer {layer}");
+                return null;
+            }
+
+            float sum = 0f;
+
+            for (int prevNeuron = 0; prevNeuron < neurons[layer - 1].Length; prevNeuron++)
+            {
+                if (weights[layer - 1][prevNeuron] == null)
+                {
+                    Debug.LogError($"FeedForward: weights[{layer - 1}][{prevNeuron}] is NULL");
+                    return null;
+                }
+
+                sum += neurons[layer - 1][prevNeuron] * weights[layer - 1][prevNeuron][neuron];
+            }
+
+            neurons[layer][neuron] = ActivationFunction(sum);
+        }
+    }
+
+    return neurons[neurons.Length - 1]; // Output layer
+}
+
+
+
+// ============================ DA QUI ==================================
+
+/*
+    // FeedForward
+    public float[] FeedForward(float[] inputs)
+    {
+        if (inputs.Length != neurons[0].Length)
+        {
+            Debug.LogError("Input size does not match network input size!");
+            return null;
+        }
+
+        // Assign inputs
+        for (int i = 0; i < inputs.Length; i++)
+        {
+            neurons[0][i] = inputs[i];
+        }
+
+        // Propagate through network
+        for (int layer = 1; layer < neurons.Length; layer++)
+        {
+            for (int neuron = 0; neuron < neurons[layer].Length; neuron++)
+            {
+                float sum = 0f;
+                for (int prevNeuron = 0; prevNeuron < neurons[layer - 1].Length; prevNeuron++)
+                {
+                    sum += neurons[layer - 1][prevNeuron] * weights[layer - 1][neuron][prevNeuron];
+                }
+                neurons[layer][neuron] = ActivationFunction(sum);
+            }
+        }
+
+        return neurons[neurons.Length - 1]; // Output layer
+    }
+*/
+
+
+    private float ActivationFunction(float x)
+    {
+        return 1f / (1f + Mathf.Exp(-x)); // Sigmoid activation, range (0,1)
+    }
+}
