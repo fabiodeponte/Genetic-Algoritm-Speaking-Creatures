@@ -72,11 +72,6 @@ public class GeneticWalkerEnhanced4LegsWithSensors : MonoBehaviour
         evaluationTime = 30f; // 30 seconds per generation
         Time.timeScale = 10f; // accelerates time x10 
 
-
-        populationSize = 4;  // size of the population
-        evaluationTime = 300f; // 30 seconds per generation
-        Time.timeScale = 1f; // accelerates time x10 
-
         //create a light
         CreateLight();
 

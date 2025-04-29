@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 public class CreatureGenerator_08_NNs
-
 {
 
     // =========== DECLARATION OF VARIABLES AND OBJECTS NEEDED IN THE METHODS ===========
@@ -60,20 +60,22 @@ public class CreatureGenerator_08_NNs
 
     // phaseOffset offsets the phase of the sinusoidal function used to drive the creature's joints (legs have a cyclical movement): 
     // it changes the intial position, but not the movement of the legs relative to one another
-    // private float phaseOffset;
+    //private float phaseOffset;
+
+    private Genome genomeNN;
+    private NeuralNetwork nn;
 
     // the value of the light sensor
-    public float lightSensorValue;
+    //public float LightSensor_08_NNs Value;
 
-    private LightSensor sensor;
-
-    public NeuralNetwork nn;
-
+    private LightSensor_08_NNs_new sensor;
+    float normalized_distance;
+    float normalized_angle;
 
     public CreatureGenerator_08_NNs(Vector3 spawnPos, List<object> genome)
     {
         gravity = 1;
-        // phaseOffset = 0;
+        //phaseOffset = 0;
         
         InitialPosition = spawnPos;
         motorForce = (float)genome[0];          // [50 | 300]
@@ -102,53 +104,8 @@ public class CreatureGenerator_08_NNs
             //Debug.Log($"lowerLen: {lowerLen} - lowerWidth: {lowerWidth} - lowerDepth: {lowerDepth}");
             //Debug.Log($"genome[14]: {genome[14]} - genome[15]: {genome[15]} - genome[16]: {genome[16]}");
 
-
-if (genome == null)
-{
-    Debug.LogError("Genome list is NULL!");
-}
-else if (genome.Count <= 19)
-{
-    Debug.LogError("Genome list is too short: Count = " + genome.Count);
-}
-else if (genome[19] == null)
-{
-    Debug.LogError("Genome[19] is NULL!");
-}
-else
-{
-    Debug.Log($"Genome[19]: {(Genome)genome[19]}");
-    Debug.Log($"layerSizes: {((Genome)genome[19]).layerSizes}");
-    Debug.Log($"weights: {((Genome)genome[19]).weights}");
-}
-
-
-Genome g = (Genome)genome[19];
-
-for (int layer = 0; layer < g.weights.Length; layer++) // <--- use Length instead of Count
-{
-    float[][] matrix = g.weights[layer];
-    int rows = matrix.Length; // how many "from" neurons
-
-    Debug.Log($"Layer {layer}: {rows} rows");
-
-    for (int i = 0; i < rows; i++)
-    {
-        int cols = matrix[i].Length; // how many "to" neurons
-        string rowText = $"Row {i}: ";
-        for (int j = 0; j < cols; j++)
-        {
-            rowText += matrix[i][j].ToString("F3") + " ";
-        }
-        Debug.Log(rowText);
-    }
-}
-
-
-
-
-        //NeuralNetwork nn01 = new NeuralNetwork((Genome)genome[19]); // creates a neural network with the received genome
-        NeuralNetwork nn = new NeuralNetwork((Genome)genome[19]);
+        genomeNN = (Genome)genome[19];          // object
+        nn = new NeuralNetwork(genomeNN.ReturnWeights());
 
         // spawnPos is the initial position where the root body of the creature will be placed when it is created
         CreateBody(spawnPos);
@@ -174,7 +131,7 @@ for (int layer = 0; layer < g.weights.Length; layer++) // <--- use Length instea
         body.mass = bodyMass;
 
         // add the sensor
-        sensor = root.AddComponent<LightSensor>();
+        sensor = root.AddComponent<LightSensor_08_NNs_new>();
         sensor.detectionRange = 200f;
         sensor.angleSensitivity = 300f;
     }
@@ -274,18 +231,39 @@ for (int layer = 0; layer < g.weights.Length; layer++) // <--- use Length instea
 
     public void UpdateMotion(float time)
     {
+
         // Inputs
         float light_dist = sensor.LightDistance();
-        float light_angle = sensor.LightAngle();
+        normalized_distance = LightSensor_08_NNs_new.NormalizeDistance(light_dist); // at distance 200 and higher it returns 1, between 0 and 200 it's logarithmic
+
+        float light_angle = sensor.LightAngle();        // this ranges from -180 to 180 degrees. we need to normalise it
+        normalized_angle = LightSensor_08_NNs_new.NormalizeAngle(light_angle, -180, +180);
+
+        distanceTraveled = light_dist; // used for the fitness function
+
         float[] inputs = new float[2];
-        inputs[0] = light_dist;
-        inputs[1] = light_angle;
-        distanceTraveled = light_dist;
+        inputs[0] = normalized_distance;
+        inputs[1] = normalized_angle;
 
-        // Run the network
-        float[] outputs = nn.FeedForward(inputs);
-        Debug.Log($"outputs.Length: {outputs.Length}");
+        float[] outputs = nn.FeedForward(inputs); // apply the neural network
+        float[] expanded_outputs = outputs;
 
+        // we expand now the output for force and speed from the range [0,1] to the range [min_force, max_force] and [min_speed, max_speed] respectively
+
+        for (int i=0; i < outputs.Length; i=i+2)
+        {
+            expanded_outputs[i] = LightSensor_08_NNs_new.ExpandToRange(outputs[i], PopulationController_08_NNs.min_force, PopulationController_08_NNs.max_force);
+        }
+
+        for (int i=1; i < outputs.Length; i=i+2)
+        {
+            expanded_outputs[i] = LightSensor_08_NNs_new.ExpandToRange(outputs[i], PopulationController_08_NNs.min_speed, PopulationController_08_NNs.max_speed);
+        }
+
+        for (int i=1; i < expanded_outputs.Length; i++)
+        {
+            Debug.LogError($"expanded_outputs[{i}]: {expanded_outputs[i]}");
+        }
 
 
         // 3. Apply the results to the legs
@@ -328,7 +306,7 @@ for (int layer = 0; layer < g.weights.Length; layer++) // <--- use Length instea
 
 }
 
-public class LightSensor : MonoBehaviour
+public class LightSensor_08_NNs_new : MonoBehaviour
 {
     //[Header("Sensor Settings")]
     public Light targetLight;              // Assign manually or auto-detect by tag
@@ -357,6 +335,8 @@ public class LightSensor : MonoBehaviour
         {
             Debug.LogError("Target Light not assigned or found.");
         }
+
+        targetLight.shadows = LightShadows.None; // the target light does not project shadows to save computational effort
         //Debug.LogError($"Target Light: {targetLight}");
     }
 
@@ -369,24 +349,6 @@ public class LightSensor : MonoBehaviour
 
     }
 */
-
-    public float LightDistance()
-    {
-        Vector3 origin = transform.position + Vector3.up * 0.5f; // put the light slightly above the body
-        Vector3 direction = transform.forward;                   // the direction the look at to detect the light
-        Vector3 toLight = targetLight.transform.position - transform.position;
-        float distanceToLight = toLight.magnitude;
-        return distanceToLight;
-    }
-
-    public float LightAngle()
-    {
-        Vector3 origin = transform.position + Vector3.up * 0.5f; // put the light slightly above the body
-        Vector3 direction = transform.forward;                   // the direction the look at to detect the light
-        Vector3 toLight = targetLight.transform.position - transform.position;
-        float angle = Vector3.Angle(transform.forward, toLight);
-        return angle;
-    }
 
     public bool SenseLight()
     {
@@ -407,11 +369,11 @@ public class LightSensor : MonoBehaviour
 
         Vector3 toLight = targetLight.transform.position - transform.position;
         float distanceToLight = toLight.magnitude;
-        float angle = Vector3.Angle(transform.forward, toLight);
-        Debug.LogError($"distanceToLight: {distanceToLight}");
-        Debug.LogError($"detectionRange: {detectionRange}");
-        Debug.LogError($"angleSensitivity: {angleSensitivity}");
-        Debug.LogError($"angle: {angle}");
+        float angle = Vector3.SignedAngle(transform.forward, toLight, Vector3.up);
+        Debug.LogError($"distanceToLight: {distanceToLight} - angle: {angle}");
+        // Debug.LogError($"detectionRange: {detectionRange}");
+        // Debug.LogError($"angleSensitivity: {angleSensitivity}");
+        // Debug.LogError($"angle: {angle}");
 
         // Check if within range
         if (distanceToLight > detectionRange)
@@ -448,14 +410,63 @@ public class LightSensor : MonoBehaviour
         detectedIntensity = intensity;
         lightDetected = true;
 
-        Debug.Log($"==================Light detected! angle: {angle}");
-        Debug.Log($"==================Light detected! targetLight.intensity: {targetLight.intensity}");
-        Debug.Log($"==================Light detected! distanceToLight: {distanceToLight}");
-        Debug.Log($"==================Light detected! Intensity: {detectedIntensity}");
+        //Debug.Log($"==================Light detected! angle: {angle}");
+        //Debug.Log($"==================Light detected! targetLight.intensity: {targetLight.intensity}");
+        //Debug.Log($"==================Light detected! distanceToLight: {distanceToLight}");
+        //Debug.Log($"==================Light detected! Intensity: {detectedIntensity}");
         return lightDetected;
     }
 
-    public void OnDrawGizmosSelected()
+    public float LightDistance()
+    {
+        Vector3 origin = transform.position + Vector3.up * 0.5f; // put the light slightly above the body
+        Vector3 direction = transform.forward;                   // the direction the look at to detect the light
+        Vector3 toLight = targetLight.transform.position - transform.position;
+        float distanceToLight = toLight.magnitude;
+        return distanceToLight;
+    }
+
+    public float LightAngle()
+    {
+        Vector3 origin = transform.position + Vector3.up * 0.5f; // put the light slightly above the body
+        Vector3 direction = transform.forward;                   // the direction the look at to detect the light
+        Vector3 toLight = targetLight.transform.position - transform.position;
+        float angle = Vector3.Angle(transform.forward, toLight);
+        return angle;
+    }
+
+    public static float NormalizeAngle(float value, float min, float max)
+    {
+        if (Mathf.Approximately(max, min))
+        {
+            Debug.LogWarning("Min and Max are equal; returning 0 to avoid division by zero.");
+            return 0f;
+        }
+        return (value - min) / (max - min);
+    }
+
+    public static float NormalizeDistance(float distance, float maxDistance = 200f)  // this makes use of a logarithmic scale
+    {
+        // Clamp distance to [0, maxDistance]
+        float clampedDistance = Mathf.Clamp(distance, 0f, maxDistance); // if it gets a distance higher than maxdistance, it truncates at maxdistances and returns 1
+
+        // Compute logarithmic normalization
+        float logValue = Mathf.Log10(clampedDistance + 1f);          // Avoid log(0)
+        float logMax = Mathf.Log10(maxDistance + 1f);                // Precompute max log
+
+        return logValue / logMax;                                    // Return value in [0,1]
+    }
+
+    public static float ExpandToRange(float normalizedValue, float min, float max)
+    {
+        // Clamp the input to make sure it's within [0, 1]
+        float clampedValue = Mathf.Clamp01(normalizedValue);
+
+        // Linearly expand to the desired range
+        return clampedValue * (max - min) + min;
+    }
+
+    public void OnDrawGizmosSelected_08_NNs()
     {
         Debug.Log("Drawing Gizmos!");
         // Visualize detection area
@@ -471,249 +482,104 @@ public class LightSensor : MonoBehaviour
     }
 }
 
-
-
 public class Genome
 {
-    public int[] layerSizes;
-    public float[][][] weights;
+    public float[][][] genomeNeuralNetworkWeights;
 
-    public Genome(int[] layerSizes, float[][][] weights)
+    public float[][][] ReturnWeights()
     {
-        this.layerSizes = layerSizes;
-        this.weights = weights;
+        return genomeNeuralNetworkWeights;
+    }
+    
+    public void SaveWeights(float[][][] weights)
+    {
+        genomeNeuralNetworkWeights = weights;
     }
 
-    // Create a new random Genome
-    public static Genome CreateRandomGenome(int numInputs, int numOutputs, int minHiddenLayers = 1, int maxHiddenLayers = 3, int minNeuronsPerLayer = 2, int maxNeuronsPerLayer = 8)
+    public void MutateNetworkWeights(float mutationRangeMin = -0.1f, float mutationRangeMax = 0.1f)
     {
-        int hiddenLayerCount = UnityEngine.Random.Range(minHiddenLayers, maxHiddenLayers + 1);
-
-        List<int> layers = new List<int>();
-        layers.Add(numInputs); // Input layer
-
-        for (int i = 0; i < hiddenLayerCount; i++)
+        for (int layer = 0; layer < genomeNeuralNetworkWeights.Length; layer++)
         {
-            int neurons = UnityEngine.Random.Range(minNeuronsPerLayer, maxNeuronsPerLayer + 1);
-            layers.Add(neurons);
-        }
-
-        layers.Add(numOutputs); // Output layer
-
-        int[] layerSizes = layers.ToArray();
-
-        float[][][] weights = new float[layerSizes.Length - 1][][];
-
-        for (int i = 0; i < layerSizes.Length - 1; i++)
-        {
-            weights[i] = new float[layerSizes[i + 1]][]; // from layer i to i+1
-
-            for (int j = 0; j < layerSizes[i + 1]; j++)
+            for (int neuron = 0; neuron < genomeNeuralNetworkWeights[layer].Length; neuron++)
             {
-                weights[i][j] = new float[layerSizes[i]];
-                for (int k = 0; k < layerSizes[i]; k++)
+                for (int input = 0; input < genomeNeuralNetworkWeights[layer][neuron].Length; input++)
                 {
-                    weights[i][j][k] = UnityEngine.Random.Range(-1f, 1f);
+                    genomeNeuralNetworkWeights[layer][neuron][input] += Random.Range(mutationRangeMin, mutationRangeMax);
                 }
             }
         }
-
-        return new Genome(layerSizes, weights);
     }
+
 }
+
 
 public class NeuralNetwork
 {
-    public int[] layerSizes;
-    public float[][] neurons;
-    public float[][][] weights;
+    private float[][][] weights; // [layer][neuron][input]
 
-    // Constructor from a Genome
-    public NeuralNetwork(Genome genome)
+    public NeuralNetwork(float[][][] initialWeights)
     {
-        this.layerSizes = (int[])genome.layerSizes.Clone();
-
-        this.neurons = new float[layerSizes.Length][];
-        for (int i = 0; i < layerSizes.Length; i++)
-        {
-            neurons[i] = new float[layerSizes[i]];
-        }
-
-        this.weights = new float[genome.weights.Length][][];
-        for (int i = 0; i < genome.weights.Length; i++)
-        {
-            weights[i] = new float[genome.weights[i].Length][];
-            for (int j = 0; j < genome.weights[i].Length; j++)
-            {
-                weights[i][j] = new float[genome.weights[i][j].Length];
-                for (int k = 0; k < genome.weights[i][j].Length; k++)
-                {
-                    weights[i][j][k] = genome.weights[i][j][k];
-                }
-            }
-        }
+        weights = initialWeights;
     }
 
-    // Export NeuralNetwork to Genome
-    public Genome ExportToGenome()
-    {
-        int[] exportedLayerSizes = (int[])layerSizes.Clone();
-
-        float[][][] exportedWeights = new float[weights.Length][][];
-
-        for (int i = 0; i < weights.Length; i++)
-        {
-            exportedWeights[i] = new float[weights[i].Length][];
-
-            for (int j = 0; j < weights[i].Length; j++)
-            {
-                exportedWeights[i][j] = new float[weights[i][j].Length];
-                for (int k = 0; k < weights[i][j].Length; k++)
-                {
-                    exportedWeights[i][j][k] = weights[i][j][k];
-                }
-            }
-        }
-
-        return new Genome(exportedLayerSizes, exportedWeights);
-    }
-
-
-
-public float[] FeedForward(float[] inputs)
-{
-    if (inputs == null)
-    {
-        Debug.LogError("FeedForward: inputs is NULL");
-        return null;
-    }
-    
-    if (neurons == null)
-    {
-        Debug.LogError("FeedForward: neurons is NULL");
-        return null;
-    }
-
-    Debug.Log("FeedForward: neurons is initialized");
-    
-    if (weights == null)
-    {
-        Debug.LogError("FeedForward: weights is NULL");
-        return null;
-    }
-    
-    Debug.Log("FeedForward: weights is initialized");
-    
-    if (neurons[0] == null)
-    {
-        Debug.LogError("FeedForward: neurons[0] is NULL");
-        return null;
-    }
-
-    if (inputs.Length != neurons[0].Length)
-    {
-        Debug.LogError($"FeedForward: input length {inputs.Length} does not match input layer size {neurons[0].Length}");
-        return null;
-    }
-
-    // Log input values
-    Debug.Log("FeedForward: inputs = " + string.Join(",", inputs));
-
-    // Set input neurons
-    for (int i = 0; i < inputs.Length; i++)
-    {
-        neurons[0][i] = inputs[i];
-    }
-
-    // Log neurons[0] after setting inputs
-    Debug.Log("FeedForward: neurons[0] after input assignment = " + string.Join(",", neurons[0]));
-
-    // Feed through layers
-    for (int layer = 1; layer < neurons.Length; layer++)
-    {
-        if (neurons[layer] == null)
-        {
-            Debug.LogError($"FeedForward: neurons[{layer}] is NULL");
-            return null;
-        }
-
-        Debug.Log($"FeedForward: Processing layer {layer}");
-
-        for (int neuron = 0; neuron < neurons[layer].Length; neuron++)
-        {
-            if (weights[layer - 1] == null)
-            {
-                Debug.LogError($"FeedForward: weights[{layer - 1}] is NULL");
-                return null;
-            }
-
-            if (weights[layer - 1].Length != neurons[layer - 1].Length)
-            {
-                Debug.LogError($"FeedForward: weights[{layer - 1}] size mismatch for layer {layer}");
-                return null;
-            }
-
-            float sum = 0f;
-
-            for (int prevNeuron = 0; prevNeuron < neurons[layer - 1].Length; prevNeuron++)
-            {
-                if (weights[layer - 1][prevNeuron] == null)
-                {
-                    Debug.LogError($"FeedForward: weights[{layer - 1}][{prevNeuron}] is NULL");
-                    return null;
-                }
-
-                sum += neurons[layer - 1][prevNeuron] * weights[layer - 1][prevNeuron][neuron];
-            }
-
-            neurons[layer][neuron] = ActivationFunction(sum);
-        }
-    }
-
-    return neurons[neurons.Length - 1]; // Output layer
-}
-
-
-
-// ============================ DA QUI ==================================
-
-/*
-    // FeedForward
     public float[] FeedForward(float[] inputs)
     {
-        if (inputs.Length != neurons[0].Length)
-        {
-            Debug.LogError("Input size does not match network input size!");
-            return null;
-        }
+        float[] current = inputs;
 
-        // Assign inputs
-        for (int i = 0; i < inputs.Length; i++)
+        for (int layer = 0; layer < weights.Length; layer++)
         {
-            neurons[0][i] = inputs[i];
-        }
+            int numNeurons = weights[layer].Length;
+            float[] next = new float[numNeurons];
 
-        // Propagate through network
-        for (int layer = 1; layer < neurons.Length; layer++)
-        {
-            for (int neuron = 0; neuron < neurons[layer].Length; neuron++)
+            for (int n = 0; n < numNeurons; n++)
             {
                 float sum = 0f;
-                for (int prevNeuron = 0; prevNeuron < neurons[layer - 1].Length; prevNeuron++)
+                for (int i = 0; i < weights[layer][n].Length; i++)
                 {
-                    sum += neurons[layer - 1][prevNeuron] * weights[layer - 1][neuron][prevNeuron];
+                    sum += current[i] * weights[layer][n][i];
                 }
-                neurons[layer][neuron] = ActivationFunction(sum);
+
+                next[n] = Tanh(sum);
             }
+
+            current = next;
         }
 
-        return neurons[neurons.Length - 1]; // Output layer
+        return current;
+    }
+
+    private float Sigmoid(float x)
+    {
+        return 1f / (1f + Mathf.Exp(-x));
+    }
+
+    private float Tanh(float x)
+    {
+        float ePos = Mathf.Exp(x);
+        float eNeg = Mathf.Exp(-x);
+        return (ePos - eNeg) / (ePos + eNeg);
+    }
+
+    private float ReLU(float x)
+    {
+        return Mathf.Max(0f, x);
+    }
+
+
+/*
+    public static float[][][] MutateNetworkWeights(float[][][] weights, float mutationRangeMin = -0.1f, float mutationRangeMax = 0.1f)
+    {
+        for (int layer = 0; layer < weights.Length; layer++)
+        {
+            for (int neuron = 0; neuron < weights[layer].Length; neuron++)
+            {
+                for (int input = 0; input < weights[layer][neuron].Length; input++)
+                {
+                    weights[layer][neuron][input] += Random.Range(mutationRangeMin, mutationRangeMax);
+                }
+            }
+        }
+        return weights;
     }
 */
-
-
-    private float ActivationFunction(float x)
-    {
-        return 1f / (1f + Mathf.Exp(-x)); // Sigmoid activation, range (0,1)
-    }
 }

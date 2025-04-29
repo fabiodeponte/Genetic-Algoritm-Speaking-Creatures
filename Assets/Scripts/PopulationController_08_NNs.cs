@@ -5,9 +5,6 @@ adesso bisogna
 - costruire la rete neurale che collega il sensore della luce al movimento delle gambe
 - mettere i parametri della rete neurale nel genoma, in modo che possa modificarsi con l'evoluzione
 - cambiare la fitness function in modo che tenga conto della distanza dalla luce
-
-- aggiungere il sensore di pressione sulle zampe?
-- la possibilità di variare il numero di zampe e di segmenti per zampa?
 */
 
 
@@ -15,6 +12,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.SceneManagement;
+using NUnit.Framework.Constraints;
+
 
 public class PopulationController_08_NNs : MonoBehaviour
 {
@@ -59,13 +58,24 @@ public class PopulationController_08_NNs : MonoBehaviour
     private float bodyMass;
 
     private CreatureGenerator_08_NNs creature;
+
     public Light targetLight;
 
+    //public float[] genomeNN;
+    //public float     genomeNN;
+    public Genome genomeNN;
+
+    public static float min_force = 50f;
+    public static float max_force = 300f;
+    public static float min_speed = 30f;
+    public static float max_speed = 70f;
+ 
+ 
 
     void Start()
     {
         // parameters
-        populationSize = 20;  // size of the population
+        populationSize = 5;  // size of the population
         evaluationTime = 30f; // 30 seconds per generation
         Time.timeScale = 10f; // accelerates time x10 
 
@@ -79,6 +89,7 @@ public class PopulationController_08_NNs : MonoBehaviour
         Vector3 newPosition = new Vector3(-10, 5, -10);
         UpdateLightSettings(lightColor, lightIntensity, lightRange, newPosition);
 
+
         // generate the population
         GenerateInitialPopulation();
     }
@@ -89,7 +100,6 @@ public class PopulationController_08_NNs : MonoBehaviour
         foreach (var creature in population)
         {
             creature.UpdateMotion(Time.time);  // this makes the creatures move
-            //creature.UpdateMotion(Time.time);  // this makes the creatures move
         }
 
         // after 30 seconds, we call EvolvePopulation, that selects the best performing creatures and generates the next generation
@@ -109,8 +119,8 @@ public class PopulationController_08_NNs : MonoBehaviour
 
         for (int i = 0; i < populationSize; i++) // for each creature, we generate a genome, meaning a certain combination of feature values
         {
-        force = Random.Range(50f, 300f); // force
-        speed = Random.Range(30f, 70f);  // speed
+        force = Random.Range(min_force, max_force); // force
+        speed = Random.Range(min_speed, max_speed);  // speed
 
         // size and shape of the central body
         a = Random.Range(1f, 2f);
@@ -189,7 +199,45 @@ public class PopulationController_08_NNs : MonoBehaviour
         // weight of the main body
         bodyMass = Random.Range(3f, 5f); // default was: 4f;
 
-        Genome genomeNN = Genome.CreateRandomGenome(2, 8); // 2 input, 8 output
+        float[][][] weights2save = new float[][][]
+        //genomeNN.genomeNeuralNetworkWeights = new float[][][]
+            {
+                // Input layer to hidden layer 1 (2 → 4)
+                new float[][]
+                {
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) }
+                },
+
+                // Hidden layer 1 to hidden layer 2 (4 → 4)
+                new float[][]
+                {
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) }
+                },
+
+                // Hidden layer 2 to output layer (4 → 8)
+                new float[][]
+                {
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) }
+                }
+            };
+
+        //genomeNN = new float[] { 0.1f, 0.2f};
+        //genomeNN = 0.3f;
+        genomeNN = new Genome();
+        genomeNN.SaveWeights(weights2save);
 
             genome = new List<object>()
             {
@@ -212,7 +260,7 @@ public class PopulationController_08_NNs : MonoBehaviour
                 lowerWidth,                                  // float   [16]
                 lowerDepth,                                  // float   [17]
                 bodyMass,                                    // float   [18]
-                genomeNN                                     // Genome  [19]
+                genomeNN                                     // float[] [19]
             };
 
             //Debug.Log($"PRIMO FILE - speed in the first file: {genome[1]}");
@@ -248,6 +296,10 @@ public class PopulationController_08_NNs : MonoBehaviour
     }
 
 
+    //Debug.Log($"genome.Count: {genomes.Count}");
+    
+    //Debug.Log($"Generation: {generation} -
+
     // check the performance of the creatures and create a new generation
     void EvolvePopulation()
     {
@@ -260,6 +312,7 @@ public class PopulationController_08_NNs : MonoBehaviour
 
         scored.Sort((a, b) => b.Item1.CompareTo(a.Item1)); // sort the list by distance
 
+/*
         // Show the performance of the best performing creature
         Debug.Log($"Generation: {generation} - Winner: {scored[0].Item3} - Distance: {scored[0].Item1} - GENOME:: " +
           $"force: {scored[0].Item2[0]} | " +
@@ -281,7 +334,10 @@ public class PopulationController_08_NNs : MonoBehaviour
           $"lowerLen: {scored[0].Item2[15]} | " +
           $"lowerWidth: {scored[0].Item2[16]} | " +
           $"lowerDepth: {scored[0].Item2[17]} | " +
-          $"bodyMass: {scored[0].Item2[18]}");
+          $"bodyMass: {scored[0].Item2[18]} | " +
+          $"genomeNN: {((float[])scored[0].Item2[19])[0]} - {((float[])scored[0].Item2[19])[1]}");
+*/
+
 
 
         //remove all creatures
@@ -325,16 +381,51 @@ public class PopulationController_08_NNs : MonoBehaviour
             float value03 = 0;
             Vector3 valueToAdd = new Vector3 (0f, 0f, 0f);
 
+            Debug.LogError($"============================================================================== MUTATION - parent1.Count: {parent1.Count}");
+
             // GENERATE A NEW GENOME, WITH CROSSOVER AND MUTATION
             for (int g = 0; g < parent1.Count; g++)
             {
                 // CROSSOVER: each gene is ramdomly picked from either parent 1 or parent 2
-                object child_gene = (Random.value > 0.5f ? parent1[g] : parent2[g]);   // crossover
+                object child_gene = Random.value > 0.5f ? parent1[g] : parent2[g];   // crossover
+
+                Debug.LogError($"============================================================================== g: {g} - child_gene.GetType(): {child_gene.GetType()}");
 
                 // MUTATION: 1 in 5 is also sligthly modified (by +/- 10%)
                 if (Random.value < 0.2f) // 20% probability of mutation
                 { 
-                    if (g < 6 || g > 11) // The genes between before 6 and after 11 are float
+                    if (g == 19)
+                    { 
+                        //new_gene = NeuralNetwork.MutateNetworkWeights(child_gene.ReturnWeights(), -0.1f, 0.1f);
+
+                        ((Genome)child_gene).MutateNetworkWeights();
+
+                        ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+                        /// ////  **********************
+
+                        //float[][][] a = child_gene.ReturnWeights();
+                        //child.Add(new_gene);
+                        Debug.LogError($"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ g: {g} - child_gene.GetType(): {child_gene.GetType()}");
+                        percentage1 = Random.Range(-10f, 10f) / 100; // percentage between -10% and +10%
+                        // HERE THE MUTATION OF THE GENOME OF THE NEURAL NETWORK
+                    }
+
+                    else if (g < 6 || g > 11) // The genes between before 6 and after 11 are float
                     { 
                         percentage = Random.Range(-10f, 10f) / 100; // percentage between -10% and +10%
                         new_gene = (1 + percentage) * (float)child_gene;
@@ -342,7 +433,7 @@ public class PopulationController_08_NNs : MonoBehaviour
                         gene_added = 1;     // if there's mutation we add the gene directly here or below
                     }
 
-                    else        // the genes between 6 and 11 are of type Vector3
+                    else    // the genes between 6 and 11 are of type Vector3                           
                     {
                         percentage1 = Random.Range(-10f, 10f) / 100; // percentage between -10% and +10%
                         percentage2 = Random.Range(-10f, 10f) / 100; // percentage between -10% and +10%
@@ -367,7 +458,6 @@ public class PopulationController_08_NNs : MonoBehaviour
 
                 if (gene_added == 0) child.Add(child_gene); // if there was no mutation we add the gene here
                 gene_added = 0; // reset the flag
-
             }
             genomes.Add(child); // add the entire genome of the child to the list of the genomes of the new population
         }
@@ -469,6 +559,9 @@ public class PopulationController_08_NNs : MonoBehaviour
 
 
 }
+
+
+
 
 
 
