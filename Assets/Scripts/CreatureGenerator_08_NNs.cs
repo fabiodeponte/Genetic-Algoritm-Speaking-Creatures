@@ -134,6 +134,9 @@ public class CreatureGenerator_08_NNs
         sensor = root.AddComponent<LightSensor_08_NNs_new>();
         sensor.detectionRange = 200f;
         sensor.angleSensitivity = 300f;
+        sensor.RegisterInitialPosition(InitialPosition);
+
+
     }
 
     void CreateLegs()
@@ -239,7 +242,7 @@ public class CreatureGenerator_08_NNs
         float light_angle = sensor.LightAngle();        // this ranges from -180 to 180 degrees. we need to normalise it
         normalized_angle = LightSensor_08_NNs_new.NormalizeAngle(light_angle, -180, +180);
 
-        distanceTraveled = light_dist; // used for the fitness function
+        distanceTraveled = sensor.distanceTraveledTowardsLight(); // the original distance to the light minus the current distance
 
         float[] inputs = new float[2];
         inputs[0] = normalized_distance;
@@ -250,12 +253,12 @@ public class CreatureGenerator_08_NNs
 
         // we expand now the output for force and speed from the range [0,1] to the range [min_force, max_force] and [min_speed, max_speed] respectively
 
-        for (int i=0; i < outputs.Length; i=i+2)
+        for (int i=0; i < outputs.Length; i=i+2) // force: neurons 0, 2, 4, 6
         {
             expanded_outputs[i] = LightSensor_08_NNs_new.ExpandToRange(outputs[i], PopulationController_08_NNs.min_force, PopulationController_08_NNs.max_force);
         }
 
-        for (int i=1; i < outputs.Length; i=i+2)
+        for (int i=1; i < outputs.Length; i=i+2) // speed: neurons 1, 3, 5, 7
         {
             expanded_outputs[i] = LightSensor_08_NNs_new.ExpandToRange(outputs[i], PopulationController_08_NNs.min_speed, PopulationController_08_NNs.max_speed);
         }
@@ -318,6 +321,9 @@ public class LightSensor_08_NNs_new : MonoBehaviour
     public bool lightDetected;
     public float detectedIntensity;
 
+    public float originalDistanceToLight;
+    public Vector3 initialPositionSensor;
+
     private void Start()
     {
         // Optional: find the light by tag if not set
@@ -338,17 +344,10 @@ public class LightSensor_08_NNs_new : MonoBehaviour
 
         targetLight.shadows = LightShadows.None; // the target light does not project shadows to save computational effort
         //Debug.LogError($"Target Light: {targetLight}");
-    }
 
-/*
-    void Update()
-    {
-        Debug.LogError($"SenseLight: {SenseLight()}");
-        if (SenseLight()==true)
-        OnDrawGizmosSelected();
 
+        originalDistanceToLight = (targetLight.transform.position - initialPositionSensor).magnitude;
     }
-*/
 
     public bool SenseLight()
     {
@@ -370,7 +369,7 @@ public class LightSensor_08_NNs_new : MonoBehaviour
         Vector3 toLight = targetLight.transform.position - transform.position;
         float distanceToLight = toLight.magnitude;
         float angle = Vector3.SignedAngle(transform.forward, toLight, Vector3.up);
-        Debug.LogError($"distanceToLight: {distanceToLight} - angle: {angle}");
+        // Debug.LogError($"distanceToLight: {distanceToLight} - angle: {angle}");
         // Debug.LogError($"detectionRange: {detectionRange}");
         // Debug.LogError($"angleSensitivity: {angleSensitivity}");
         // Debug.LogError($"angle: {angle}");
@@ -417,6 +416,11 @@ public class LightSensor_08_NNs_new : MonoBehaviour
         return lightDetected;
     }
 
+    public void RegisterInitialPosition(Vector3 initialPosition)
+    {
+        initialPositionSensor = initialPosition;
+    }
+
     public float LightDistance()
     {
         Vector3 origin = transform.position + Vector3.up * 0.5f; // put the light slightly above the body
@@ -424,6 +428,13 @@ public class LightSensor_08_NNs_new : MonoBehaviour
         Vector3 toLight = targetLight.transform.position - transform.position;
         float distanceToLight = toLight.magnitude;
         return distanceToLight;
+    }
+
+    public float distanceTraveledTowardsLight()
+    {
+        float currentDistance = LightDistance();
+        float dist_traveled = originalDistanceToLight - currentDistance;
+        return dist_traveled;
     }
 
     public float LightAngle()
@@ -505,6 +516,7 @@ public class Genome
                 for (int input = 0; input < genomeNeuralNetworkWeights[layer][neuron].Length; input++)
                 {
                     genomeNeuralNetworkWeights[layer][neuron][input] += Random.Range(mutationRangeMin, mutationRangeMax);
+                    genomeNeuralNetworkWeights[layer][neuron][input] = Mathf.Clamp01(genomeNeuralNetworkWeights[layer][neuron][input]);
                 }
             }
         }
@@ -522,6 +534,52 @@ public class NeuralNetwork
         weights = initialWeights;
     }
 
+
+
+// THIS NETWORK HAS 
+// - Sigmoid activation for all hidden layers
+// - ReLU on FORCE outputs 0, 2, 4, 6, Tanh on SPEED outputs 1, 3, 5, 7
+    public float[] FeedForward(float[] inputs)
+    {
+        float[] current = inputs;
+
+        for (int layer = 0; layer < weights.Length; layer++)
+        {
+            int numNeurons = weights[layer].Length;
+            float[] next = new float[numNeurons];
+            bool isOutputLayer = (layer == weights.Length - 1);
+
+            for (int n = 0; n < numNeurons; n++)
+            {
+                float sum = 0f;
+                for (int i = 0; i < weights[layer][n].Length; i++)
+                {
+                    sum += current[i] * weights[layer][n][i];
+                }
+
+                if (isOutputLayer)
+                {
+                    // Output layer: use ReLU for even indices, Tanh for odd
+                    if (n % 2 == 0)
+                        next[n] = ReLU(sum);
+                    else
+                        next[n] = Tanh(sum);
+                }
+                else
+                {
+                    // Hidden layers: use Sigmoid
+                    next[n] = Sigmoid(sum);
+                }
+            }
+
+            current = next;
+        }
+
+        return current;
+    }
+
+
+/*
     public float[] FeedForward(float[] inputs)
     {
         float[] current = inputs;
@@ -547,6 +605,7 @@ public class NeuralNetwork
 
         return current;
     }
+*/
 
     private float Sigmoid(float x)
     {
