@@ -6,14 +6,14 @@ using UnityEditor.SceneManagement;
 
 
 
-public class GeneticWalkerEnhancedTwoLegs : MonoBehaviour
+public class Creatures03_CreatureGenerator_PhysicalEvolve_2Legs : MonoBehaviour
 {
     
     public int populationSize;
     public float evaluationTime;
     private float timer;
 
-    private List<WalkerCreatureEnhancedTwoLegs> population = new List<WalkerCreatureEnhancedTwoLegs>();
+    private List<Creatures03_PopulationManager_PhysicalEvolve_2Legs> population = new List<Creatures03_PopulationManager_PhysicalEvolve_2Legs>();
     private List<object> genome = new List<object>();
     private List<List<object>> genomes = new List<List<object>>();
     private int generation = 0;
@@ -173,8 +173,8 @@ private float bodyMass;
 
             genomes.Add(genome);
 
-            //var creature = new WalkerCreatureEnhancedTwoLegs(new Vector3(i * 10f, 2, 0), genome);
-            var creature = new WalkerCreatureEnhancedTwoLegs(new Vector3((i % 5) * 10f, 2f, (i / 5) * 10f), genome);
+            //var creature = new Creatures03_PopulationManager_PhysicalEvolve_2Legs(new Vector3(i * 10f, 2, 0), genome);
+            var creature = new Creatures03_PopulationManager_PhysicalEvolve_2Legs(new Vector3((i % 5) * 10f, 2f, (i / 5) * 10f), genome);
             population.Add(creature);
         }
         timer = 0f;
@@ -349,8 +349,8 @@ private float bodyMass;
         // CREATES THE NEW POPULATION
         for (int i = 0; i < populationSize; i++)
         {
-            //var creature = new WalkerCreatureEnhancedTwoLegs(new Vector3(i * 3f, 2, 0), genomes[i]);
-            var creature = new WalkerCreatureEnhancedTwoLegs(new Vector3((i % 5) * 10f, 2f, (i / 5) * 10f), genomes[i]);
+            //var creature = new Creatures03_PopulationManager_PhysicalEvolve_2Legs(new Vector3(i * 3f, 2, 0), genomes[i]);
+            var creature = new Creatures03_PopulationManager_PhysicalEvolve_2Legs(new Vector3((i % 5) * 10f, 2f, (i / 5) * 10f), genomes[i]);
             population.Add(creature);
         }
 
@@ -370,7 +370,7 @@ private float bodyMass;
 
 
 
-    void ColorFastestCreature(WalkerCreatureEnhancedTwoLegs creature)
+    void ColorFastestCreature(Creatures03_PopulationManager_PhysicalEvolve_2Legs creature)
     {
         Color gold = new Color(1f, 0.84f, 0f); // gold color
 
@@ -384,7 +384,7 @@ private float bodyMass;
 
 
 
-void IgnoreCollisionsBetweenCreatures(WalkerCreatureEnhancedTwoLegs a, WalkerCreatureEnhancedTwoLegs b)
+void IgnoreCollisionsBetweenCreatures(Creatures03_PopulationManager_PhysicalEvolve_2Legs a, Creatures03_PopulationManager_PhysicalEvolve_2Legs b)
 {
     // Get all colliders of creature a
     List<Collider> collidersA = new List<Collider>();

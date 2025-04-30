@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class WalkerCreatureEnhancedTwoLegs
+public class Creatures03_PopulationManager_PhysicalEvolve_2Legs
 {
     public GameObject root;
     public GameObject upper;
@@ -53,7 +53,7 @@ public class WalkerCreatureEnhancedTwoLegs
     // phaseOffset offsets the phase of the sinusoidal function used to drive the creature's joints
     private float phaseOffset = 0;
 
-    public WalkerCreatureEnhancedTwoLegs(Vector3 spawnPos, List<object> genome)
+    public Creatures03_PopulationManager_PhysicalEvolve_2Legs(Vector3 spawnPos, List<object> genome)
     {
         InitialPosition = spawnPos;
         motorForce = (float)genome[0];      // [0, 300]
