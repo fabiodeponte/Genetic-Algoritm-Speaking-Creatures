@@ -62,7 +62,7 @@ public class CreatureGenerator_08_NNs
     // it changes the intial position, but not the movement of the legs relative to one another
     //private float phaseOffset;
 
-    private Genome genomeNN;
+    public Genome genomeNN;
     private NeuralNetwork nn;
 
     // the value of the light sensor
@@ -71,6 +71,8 @@ public class CreatureGenerator_08_NNs
     private LightSensor_08_NNs_new sensor;
     float normalized_distance;
     float normalized_angle;
+
+    public float[] lastOutputsOfTheSingleExperiment;
 
     public CreatureGenerator_08_NNs(Vector3 spawnPos, List<object> genome)
     {
@@ -132,8 +134,8 @@ public class CreatureGenerator_08_NNs
 
         // add the sensor
         sensor = root.AddComponent<LightSensor_08_NNs_new>();
-        sensor.detectionRange = 200f;
-        sensor.angleSensitivity = 300f;
+        sensor.detectionRange = GeneralConfigurationParameters.lightSensorDetectionRange;
+        sensor.angleSensitivity = GeneralConfigurationParameters.lightSensorAngleSensitivity;
         sensor.RegisterInitialPosition(InitialPosition);
 
 
@@ -237,12 +239,10 @@ public class CreatureGenerator_08_NNs
 
         // Inputs
         float light_dist = sensor.LightDistance();
-        normalized_distance = LightSensor_08_NNs_new.NormalizeDistance(light_dist); // at distance 200 and higher it returns 1, between 0 and 200 it's logarithmic
+        normalized_distance = LightSensor_08_NNs_new.NormalizeDistance(light_dist); // normalise at [0,1] - at distance 200 and higher it returns 1, between 0 and 200 it's logarithmic
 
-        float light_angle = sensor.LightAngle();        // this ranges from -180 to 180 degrees. we need to normalise it
+        float light_angle = sensor.LightAngle();        // this ranges from -180 to 180 degrees - normalise at [0,1]
         normalized_angle = LightSensor_08_NNs_new.NormalizeAngle(light_angle, -180, +180);
-
-        distanceTraveled = sensor.distanceTraveledTowardsLight(); // the original distance to the light minus the current distance
 
         float[] inputs = new float[2];
         inputs[0] = normalized_distance;
@@ -263,11 +263,14 @@ public class CreatureGenerator_08_NNs
             expanded_outputs[i] = LightSensor_08_NNs_new.ExpandToRange(outputs[i], PopulationController_08_NNs.min_speed, PopulationController_08_NNs.max_speed);
         }
 
-        for (int i=1; i < expanded_outputs.Length; i++)
+        lastOutputsOfTheSingleExperiment = expanded_outputs;
+
+/*
+        for (int i=0; i < expanded_outputs.Length; i++)
         {
             Debug.LogError($"expanded_outputs[{i}]: {expanded_outputs[i]}");
         }
-
+*/
 
         // 3. Apply the results to the legs
         for (int i = 0; i < hips.Count; i++)
@@ -289,7 +292,7 @@ public class CreatureGenerator_08_NNs
         }
 
         var a = sensor.SenseLight(); // at each update we update the value of the light sensor as well
-        //if (sensor.SenseLight()==true) sensor.OnDrawGizmosSelected();
+        distanceTraveled = sensor.distanceTraveledTowardsLight(); // the original distance to the light minus the current distance for the fitness function
     }
 
 
@@ -534,11 +537,10 @@ public class NeuralNetwork
         weights = initialWeights;
     }
 
-
-
 // THIS NETWORK HAS 
 // - Sigmoid activation for all hidden layers
-// - ReLU on FORCE outputs 0, 2, 4, 6, Tanh on SPEED outputs 1, 3, 5, 7
+// - ReLU on FORCE outputs 0, 2, 4, 6
+// - Tanh on SPEED outputs 1, 3, 5, 7
     public float[] FeedForward(float[] inputs)
     {
         float[] current = inputs;
@@ -559,9 +561,10 @@ public class NeuralNetwork
 
                 if (isOutputLayer)
                 {
-                    // Output layer: use ReLU for even indices, Tanh for odd
+                    // Output layer: use ReLU for even indices (force), Tanh for odd (speed)
                     if (n % 2 == 0)
-                        next[n] = ReLU(sum);
+                        // next[n] = ReLU(sum);
+                        next[n] = Tanh(sum);
                     else
                         next[n] = Tanh(sum);
                 }
@@ -569,6 +572,8 @@ public class NeuralNetwork
                 {
                     // Hidden layers: use Sigmoid
                     next[n] = Sigmoid(sum);
+
+
                 }
             }
 

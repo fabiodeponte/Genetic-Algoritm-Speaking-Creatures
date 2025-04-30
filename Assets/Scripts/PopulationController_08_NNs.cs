@@ -12,6 +12,56 @@ using UnityEditor.SceneManagement;
 using NUnit.Framework.Constraints;
 
 
+public class GeneralConfigurationParameters
+{
+    // GENERAL PARAMETERS
+    public static int populationSize = 100;     // size of the population
+    public static float evaluationTime = 10f;   // 30 seconds per generation
+    public static float timeScale = 5f;         // accelerates time x10 
+
+    // RANGE OF FORCE AND SPEED FOR THE LEGS OF THE AGENTS
+    public static float min_force = 50f;
+    public static float max_force = 300f;
+    public static float min_speed = 30f;
+    public static float max_speed = 70f;
+ 
+    // LIGHT PARAMETERS
+    public static Color lightColor = Color.white;     // Light color
+    public static float lightIntensity = 25.0f;       // Light intensity
+    public static float lightRange = 10.0f;           // Light Range: this is not relevant - the distance is calculated between the position of the light and of the agent, no matter what the lightRange is
+    
+    // LIGHT POSITION (RANDOM RANGE) - 2 for Y (slightly above creatures) and from -100 to +100 for X and Z
+    public static int lightPosition_range_min_X = -100;
+    public static int lightPosition_range_max_X = 100;
+    public static int lightPosition_range_min_Y = 2;
+    public static int lightPosition_range_max_Y = 2;
+    public static int lightPosition_range_min_Z = -100;
+    public static int lightPosition_range_max_Z = 100; 
+
+    // LIGHT SENSOR PARAMETERS
+    public static float lightSensorDetectionRange = 500f;   // This is the relevant variable to define how far the agent can see the light
+    public static float lightSensorAngleSensitivity = 180f; // Sensors see angles from -180 to +180 degrees
+
+    // GENOMES
+    public static string physicalInitialGenome = "Duck";
+    // Possible alternatives:
+    //  - Random: every creature has a random genome
+    //  - GallopingSavannah: every creature shares the physical genome of GallopingSavannah
+    //  - Bison: every creature shares the physical genome of Bison
+    //  - Duck: every creature shares the physical genome of Duck
+
+    // STOP PHYSICAL MUTATION
+    public static bool freezePhysicalEvolution = true; // stop mutation of the physical genome (still does crossover)
+
+    // INITIAL DISPOSITION OF THE AGENTS ON THE GROUND
+    public static Vector3 ComputePosition(int i)
+    {
+        return new Vector3((i % 5) * 10f, 2f, (i / 5) * 10f); // in lines of 5, at a distance of 10 from each other
+        // change to new Vector3(i * 10f, 2, 0) if you want the creature in a line an not in lines of five elements each
+    }
+
+}
+
 public class PopulationController_08_NNs : MonoBehaviour
 {
     
@@ -25,8 +75,6 @@ public class PopulationController_08_NNs : MonoBehaviour
     private int generation = 0;
 
     public GameObject body;
-
-
 
     private Vector3 bodySize;
     private Vector3 positionLeg1;
@@ -58,32 +106,28 @@ public class PopulationController_08_NNs : MonoBehaviour
 
     public Light targetLight;
 
-    //public float[] genomeNN;
-    //public float     genomeNN;
     public Genome genomeNN;
 
-    public static float min_force = 50f;
-    public static float max_force = 300f;
-    public static float min_speed = 30f;
-    public static float max_speed = 70f;
+    public static float min_force = GeneralConfigurationParameters.min_force;
+    public static float max_force = GeneralConfigurationParameters.max_force;
+    public static float min_speed = GeneralConfigurationParameters.min_speed;
+    public static float max_speed = GeneralConfigurationParameters.max_speed;
  
-    Color lightColor = Color.white;           // Light color
-    float lightIntensity = 25.0f;              // Light intensity
-    float lightRange = 10.0f;
+    Color lightColor = GeneralConfigurationParameters.lightColor;
+    float lightIntensity = GeneralConfigurationParameters.lightIntensity;
+    float lightRange = GeneralConfigurationParameters.lightRange;
     Vector3 newPosition;
-
-    static bool freezePhisicalEvolution;
 
 
     void Start()
     {
         // parameters
-        populationSize = 20;  // size of the population
-        evaluationTime = 10f; // 30 seconds per generation
-        Time.timeScale = 5f; // accelerates time x10 
+        populationSize = GeneralConfigurationParameters.populationSize;  // size of the population
+        evaluationTime = GeneralConfigurationParameters.evaluationTime; // 30 seconds per generation
+        Time.timeScale = GeneralConfigurationParameters.timeScale; // accelerates time x10 
 
         //create a light
-        newPosition = new Vector3(Random.Range(-100, 100), 2, Random.Range(-100, 100));
+        newPosition = new Vector3(Random.Range(GeneralConfigurationParameters.lightPosition_range_min_X, GeneralConfigurationParameters.lightPosition_range_max_X), Random.Range(GeneralConfigurationParameters.lightPosition_range_min_Y, GeneralConfigurationParameters.lightPosition_range_max_Y), Random.Range(GeneralConfigurationParameters.lightPosition_range_min_Z, GeneralConfigurationParameters.lightPosition_range_max_Z));
         CreateLight(lightColor, lightIntensity, lightRange, newPosition);
 
         // generate the population
@@ -110,10 +154,31 @@ public class PopulationController_08_NNs : MonoBehaviour
 
     void GenerateInitialPopulation()
     {
-        //GenomeInitializeGallopingSavannah();
-        GenomeInitializeBison();
-        GenomeInitializeDuck();
-        freezePhisicalEvolution = true;
+        
+        // initialize Genomes
+        switch (GeneralConfigurationParameters.physicalInitialGenome)
+        {
+            case "Random":
+                GenomeRandomInitialization();
+                break;
+
+            case "GallopingSavannah":
+                GenomeInitializeGallopingSavannah();
+                break;
+
+            case "Bison":
+                GenomeInitializeBison();
+                break;
+
+            case "Duck":
+                GenomeInitializeDuck();
+                break;
+
+            default:
+                GenomeRandomInitialization();
+                break;
+        }
+
         
         for (int i = 0; i < populationSize; i++) // for each creature, we generate a genome, meaning a certain combination of feature values
         {
@@ -148,8 +213,7 @@ public class PopulationController_08_NNs : MonoBehaviour
             genomes.Add(genome);
 
             // generate a creature for each genome in the list
-            creature = new CreatureGenerator_08_NNs(new Vector3((i % 5) * 10f, 2, (i / 5) * 10f), genome);
-            // change to (new Vector3(i * 10f, 2, 0), genome) if you want the creature in a line an not in lines of five elements each
+            creature = new CreatureGenerator_08_NNs(GeneralConfigurationParameters.ComputePosition(i), genome);
 
             // add the generated creature to the population list
             population.Add(creature);
@@ -188,10 +252,14 @@ public class PopulationController_08_NNs : MonoBehaviour
         scored.Sort((a, b) => b.Item1.CompareTo(a.Item1)); // sort the list by distance
 
 
+        var message = $"";
+
         // Show the performance of the best performing creature
-        Debug.Log($"Generation: {generation} - Winner: {scored[0].Item3} - Distance: {scored[0].Item1} - GENOME:: " +
-          $"force: {scored[0].Item2[0]} | " +
-          $"speed: {scored[0].Item2[1]} | " +
+        var message01 = $"Generation: {generation} - Winner: {scored[0].Item3} - Distance: {scored[0].Item1} \n";
+
+        var message02 = $"PHYSICAL GENOME: " +
+          //$"force: {scored[0].Item2[0]} | " +         // force and speed are governed by the NN
+          //$"speed: {scored[0].Item2[1]} | " +         // force and speed are governed by the NN
           $"limitsHipMin: {scored[0].Item2[2]} | " +
           $"limitsHipMax: {scored[0].Item2[3]} | " +
           $"limitsKneeMin: {scored[0].Item2[4]} | " +
@@ -199,9 +267,9 @@ public class PopulationController_08_NNs : MonoBehaviour
           $"bodySize: {scored[0].Item2[6]} | " +
           $"positionLeg1: {scored[0].Item2[7]} | " +
           $"positionLeg2: {scored[0].Item2[8]} | " +
-          $"positionLeg3: {scored[0].Item2[9]} | " +
-          $"\n" +
-          $"positionLeg4: {scored[0].Item2[10]} | " +
+          $"positionLeg3: {scored[0].Item2[9]} | ";
+        message02 += $"\n";
+        message02 += $"positionLeg4: {scored[0].Item2[10]} | " +
           $"bodyCenterOfMass: {scored[0].Item2[11]} | " +
           $"upperLen: {scored[0].Item2[12]} | " +
           $"upperWidth: {scored[0].Item2[13]} | " +
@@ -209,11 +277,74 @@ public class PopulationController_08_NNs : MonoBehaviour
           $"lowerLen: {scored[0].Item2[15]} | " +
           $"lowerWidth: {scored[0].Item2[16]} | " +
           $"lowerDepth: {scored[0].Item2[17]} | " +
-          $"bodyMass: {scored[0].Item2[18]} | " +
-          $"genomeNN: {scored[0].Item2[19]}");
+          $"bodyMass: {scored[0].Item2[18]} | ";
+          //$"genomeNN: {scored[0].Item2[19]}";         // displayed in detailed below
+
+       Debug.Log(message01);
+       Debug.Log(message02);
+
+       var message03 = $"BEHAVIOURAL GENOME - WEIGHTS OF THE NEURAL NETWORK: \n";
+       Debug.Log(message03);
+
+        // The weights of the neural network
+        float[][][] weights = population[scored[0].Item3].genomeNN.ReturnWeights();
+        for (int layer = 0; layer < weights.Length; layer++)
+        {
+            var message04 = $"Layer {layer}:";
+            for (int i = 0; i < weights[layer].Length; i++)
+            {
+                string rowValues = "";
+                for (int j = 0; j < weights[layer][i].Length; j++)
+                {
+                    rowValues += weights[layer][i][j].ToString("F4") + " ";
+                }
+                message04 += $" Weights Neuron {i}: {rowValues}";
+            }
+            Debug.Log(message04);
+        }
+
+        var message05 = $"FORCE AND SPEED DETERMINED BY THE NEURAL NETWORK: \n";
+        // print out force and speed produced by the neural network
+        message05 += $"Force 1: {population[scored[0].Item3].lastOutputsOfTheSingleExperiment[0]} | "+
+          $"Speed 1: {population[scored[0].Item3].lastOutputsOfTheSingleExperiment[1]} | "+
+          $"Force 2: {population[scored[0].Item3].lastOutputsOfTheSingleExperiment[2]} | "+
+          $"Speed 2: {population[scored[0].Item3].lastOutputsOfTheSingleExperiment[3]} | "+
+          $"Force 3: {population[scored[0].Item3].lastOutputsOfTheSingleExperiment[4]} | "+
+          $"Speed 3: {population[scored[0].Item3].lastOutputsOfTheSingleExperiment[5]} | "+
+          $"Force 4: {population[scored[0].Item3].lastOutputsOfTheSingleExperiment[6]} | "+
+          $"Speed 4: {population[scored[0].Item3].lastOutputsOfTheSingleExperiment[7]}";
 
 
 
+
+        Debug.Log(message05);
+        Debug.Log($"=============================");
+
+
+/*
+        for (int layer = 0; layer < weights.Length; layer++)
+        {
+            Debug.Log($"Layer {layer}:");
+            for (int i = 0; i < weights[layer].Length; i++)
+            {
+                string rowValues = "";
+                for (int j = 0; j < weights[layer][i].Length; j++)
+                {
+                    rowValues += weights[layer][i][j].ToString("F4") + " ";
+                }
+                Debug.Log($"  Neuron {i}: {rowValues}");
+            }
+        }
+*/
+
+
+
+/*
+        for (int i=0; i < population[scored[0].Item3].lastOutputsOfTheSingleExperiment.Length; i++)
+        {
+            Debug.Log($"lastOutputsOfTheSingleExperiment[{i}]: {population[scored[0].Item3].lastOutputsOfTheSingleExperiment[i]}");
+        }
+*/
 
         //remove all creatures
         for (int i = 0; i < population.Count; i++)
@@ -266,13 +397,13 @@ public class PopulationController_08_NNs : MonoBehaviour
 
                 // Debug.LogError($"============================================================================== g: {g} - child_gene.GetType(): {child_gene.GetType()}");
 
-                if (Random.value < 0.5f &&  g == 19)
+                if (Random.value < 0.5f &&  g == 19) // mutate one in two
                 {
                     ((Genome)child_gene).MutateNetworkWeights();                    
                 }
 
                 // MUTATION: 1 in 5 is also sligthly modified (by +/- 10%)
-                if (Random.value < 0.2f && freezePhisicalEvolution == false) // 20% probability of mutation
+                if (Random.value < 0.2f && GeneralConfigurationParameters.freezePhysicalEvolution == false) // 20% probability of mutation
                 { 
                     if (g == 19)
                     { 
@@ -346,7 +477,7 @@ public class PopulationController_08_NNs : MonoBehaviour
         // CREATES THE NEW POPULATION WITH THE LIST OF GENOMES
         for (int i = 0; i < populationSize; i++)
         {
-            var creature = new CreatureGenerator_08_NNs(new Vector3((i % 5) * 10f, 2, (i / 5) * 10f), genomes[i]);
+            var creature = new CreatureGenerator_08_NNs(GeneralConfigurationParameters.ComputePosition(i), genomes[i]);
             // change to (new Vector3(i * 10f, 2, 0), genome) if you want the creature in a line an not in lines of five elements each
 
             // add the generated creature to the population list
@@ -357,7 +488,7 @@ public class PopulationController_08_NNs : MonoBehaviour
         timer = 0f;   // reset the timer at each new generation
 
         // change light position
-        newPosition = new Vector3(Random.Range(-100, 100), 2, Random.Range(-100, 100));
+        newPosition = new Vector3(Random.Range(GeneralConfigurationParameters.lightPosition_range_min_X, GeneralConfigurationParameters.lightPosition_range_max_X), Random.Range(GeneralConfigurationParameters.lightPosition_range_min_Y, GeneralConfigurationParameters.lightPosition_range_max_Y), Random.Range(GeneralConfigurationParameters.lightPosition_range_min_Z, GeneralConfigurationParameters.lightPosition_range_max_Z));
         UpdateLightSettings(lightColor, lightIntensity, lightRange, newPosition);
     }
 
