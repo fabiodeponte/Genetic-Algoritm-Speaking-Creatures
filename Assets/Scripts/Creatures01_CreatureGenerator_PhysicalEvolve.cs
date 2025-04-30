@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class WalkerCreatureEnhanced4LegsWithSensors
+public class Creatures01_CreatureGenerator_PhysicalEvolve
 {
 
     // =========== DECLARATION OF VARIABLES AND OBJECTS NEEDED IN THE METHODS ===========
@@ -67,7 +67,7 @@ public class WalkerCreatureEnhanced4LegsWithSensors
     private LightSensor_08_NNs sensor;
 
 
-    public WalkerCreatureEnhanced4LegsWithSensors(Vector3 spawnPos, List<object> genome)
+    public Creatures01_CreatureGenerator_PhysicalEvolve(Vector3 spawnPos, List<object> genome)
     {
         gravity = 1;
         phaseOffset = 0;
@@ -310,6 +310,7 @@ public class LightSensor_08_NNs : MonoBehaviour
             Debug.LogError("Target Light not assigned or found.");
         }
         //Debug.LogError($"Target Light: {targetLight}");
+        targetLight.shadows = LightShadows.None;
     }
 
 /*
@@ -329,7 +330,7 @@ public class LightSensor_08_NNs : MonoBehaviour
 
         Vector3 origin = transform.position + Vector3.up * 0.5f; // put the light slightly above the body
         Vector3 direction = transform.forward;                   // the direction the look at to detect the light
-        Debug.DrawRay(origin, direction * 10, Color.gray);
+        //Debug.DrawRay(origin, direction * 10, Color.gray);
 
 
         if (targetLight == null)
@@ -342,16 +343,16 @@ public class LightSensor_08_NNs : MonoBehaviour
         Vector3 toLight = targetLight.transform.position - transform.position;
         float distanceToLight = toLight.magnitude;
         float angle = Vector3.Angle(transform.forward, toLight);
-        Debug.LogError($"distanceToLight: {distanceToLight}");
-        Debug.LogError($"detectionRange: {detectionRange}");
-        Debug.LogError($"angleSensitivity: {angleSensitivity}");
-        Debug.LogError($"angle: {angle}");
+        //Debug.LogError($"distanceToLight: {distanceToLight}");
+        //Debug.LogError($"detectionRange: {detectionRange}");
+        //Debug.LogError($"angleSensitivity: {angleSensitivity}");
+        //Debug.LogError($"angle: {angle}");
 
         // Check if within range
         if (distanceToLight > detectionRange)
         {
             lightDetected = false;
-            Debug.LogError($"1 - distanceToLight > detectionRange");
+            //Debug.LogError($"1 - distanceToLight > detectionRange");
             return lightDetected;
         }
 
@@ -360,7 +361,7 @@ public class LightSensor_08_NNs : MonoBehaviour
         if (angle > angleSensitivity)
         {
             lightDetected = false;
-            Debug.LogError($"2 - angle > angleSensitivity");
+            //Debug.LogError($"2 - angle > angleSensitivity");
             return lightDetected;
         }
 
@@ -370,7 +371,7 @@ public class LightSensor_08_NNs : MonoBehaviour
             if (hit.transform != targetLight.transform)
             {
                 lightDetected = false;
-                Debug.LogError($"3 - hit.transform != targetLight.transform");
+                //Debug.LogError($"3 - hit.transform != targetLight.transform");
                 return lightDetected;
             }
         }
@@ -382,10 +383,10 @@ public class LightSensor_08_NNs : MonoBehaviour
         detectedIntensity = intensity;
         lightDetected = true;
 
-        Debug.Log($"==================Light detected! angle: {angle}");
-        Debug.Log($"==================Light detected! targetLight.intensity: {targetLight.intensity}");
-        Debug.Log($"==================Light detected! distanceToLight: {distanceToLight}");
-        Debug.Log($"==================Light detected! Intensity: {detectedIntensity}");
+        //Debug.Log($"==================Light detected! angle: {angle}");
+        //Debug.Log($"==================Light detected! targetLight.intensity: {targetLight.intensity}");
+        //Debug.Log($"==================Light detected! distanceToLight: {distanceToLight}");
+        //Debug.Log($"==================Light detected! Intensity: {detectedIntensity}");
         return lightDetected;
     }
 

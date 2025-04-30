@@ -11,7 +11,7 @@ public class Insect : MonoBehaviour
     public float evaluationTime;
     private float timer;
 
-    private List<WalkerCreatureEnhanced4LegsWithSensors> population = new List<WalkerCreatureEnhanced4LegsWithSensors>();
+    private List<Creatures01_CreatureGenerator_PhysicalEvolve> population = new List<Creatures01_CreatureGenerator_PhysicalEvolve>();
     private List<object> genome = new List<object>();
     private List<List<object>> genomes = new List<List<object>>();
     private int generation = 0;
@@ -46,7 +46,7 @@ public class Insect : MonoBehaviour
     private float speed;
     private float bodyMass;
 
-    private WalkerCreatureEnhanced4LegsWithSensors creature;
+    private Creatures01_CreatureGenerator_PhysicalEvolve creature;
 
     void Start()
     {
@@ -210,7 +210,7 @@ public class Insect : MonoBehaviour
             genomes.Add(genome);
 
             // generate a creature for each genome in the list
-            creature = new WalkerCreatureEnhanced4LegsWithSensors(new Vector3((i % 5) * 10f, 3, (i / 5) * 10f), genome);
+            creature = new Creatures01_CreatureGenerator_PhysicalEvolve(new Vector3((i % 5) * 10f, 3, (i / 5) * 10f), genome);
             // change to (new Vector3(i * 10f, 2, 0), genome) if you want the creature in a line an not in lines of five elements each
 
             // add the generated creature to the population list
@@ -360,7 +360,7 @@ public class Insect : MonoBehaviour
         // CREATES THE NEW POPULATION WITH THE LIST OF GENOMES
         for (int i = 0; i < populationSize; i++)
         {
-            var creature = new WalkerCreatureEnhanced4LegsWithSensors(new Vector3((i % 5) * 10f, 3, (i / 5) * 10f), genomes[i]);
+            var creature = new Creatures01_CreatureGenerator_PhysicalEvolve(new Vector3((i % 5) * 10f, 3, (i / 5) * 10f), genomes[i]);
             // change to (new Vector3(i * 10f, 2, 0), genome) if you want the creature in a line an not in lines of five elements each
 
             // add the generated creature to the population list
@@ -373,7 +373,7 @@ public class Insect : MonoBehaviour
 
 
     // function to color a creature if we want to show particularly one one
-    void ColorCreature(WalkerCreatureEnhanced4LegsWithSensors creature)
+    void ColorCreature(Creatures01_CreatureGenerator_PhysicalEvolve creature)
     {
         Color gold = new Color(1f, 0.84f, 0f); // gold color
 
@@ -384,7 +384,7 @@ public class Insect : MonoBehaviour
 
 
     // function to avoid collisions between creatures
-    void IgnoreCollisionsBetweenCreatures(WalkerCreatureEnhanced4LegsWithSensors a, WalkerCreatureEnhanced4LegsWithSensors b)
+    void IgnoreCollisionsBetweenCreatures(Creatures01_CreatureGenerator_PhysicalEvolve a, Creatures01_CreatureGenerator_PhysicalEvolve b)
     {
         // Get all colliders of creature a
         List<Collider> collidersA = new List<Collider>();

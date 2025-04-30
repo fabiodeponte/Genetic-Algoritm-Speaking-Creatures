@@ -62,14 +62,14 @@ public class GeneralConfigurationParameters
 
 }
 
-public class PopulationController_08_NNs : MonoBehaviour
+public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
 {
     
     public int populationSize;
     public float evaluationTime;
     private float timer;
 
-    private List<CreatureGenerator_08_NNs> population = new List<CreatureGenerator_08_NNs>();
+    private List<Creatures02_CreatureGenerator_Behavioural_NN> population = new List<Creatures02_CreatureGenerator_Behavioural_NN>();
     private List<object> genome = new List<object>();
     private List<List<object>> genomes = new List<List<object>>();
     private int generation = 0;
@@ -102,7 +102,7 @@ public class PopulationController_08_NNs : MonoBehaviour
     private float speed;
     private float bodyMass;
 
-    private CreatureGenerator_08_NNs creature;
+    private Creatures02_CreatureGenerator_Behavioural_NN creature;
 
     public Light targetLight;
 
@@ -213,7 +213,7 @@ public class PopulationController_08_NNs : MonoBehaviour
             genomes.Add(genome);
 
             // generate a creature for each genome in the list
-            creature = new CreatureGenerator_08_NNs(GeneralConfigurationParameters.ComputePosition(i), genome);
+            creature = new Creatures02_CreatureGenerator_Behavioural_NN(GeneralConfigurationParameters.ComputePosition(i), genome);
 
             // add the generated creature to the population list
             population.Add(creature);
@@ -477,7 +477,7 @@ public class PopulationController_08_NNs : MonoBehaviour
         // CREATES THE NEW POPULATION WITH THE LIST OF GENOMES
         for (int i = 0; i < populationSize; i++)
         {
-            var creature = new CreatureGenerator_08_NNs(GeneralConfigurationParameters.ComputePosition(i), genomes[i]);
+            var creature = new Creatures02_CreatureGenerator_Behavioural_NN(GeneralConfigurationParameters.ComputePosition(i), genomes[i]);
             // change to (new Vector3(i * 10f, 2, 0), genome) if you want the creature in a line an not in lines of five elements each
 
             // add the generated creature to the population list
@@ -494,7 +494,7 @@ public class PopulationController_08_NNs : MonoBehaviour
 
 
     // function to color a creature if we want to show particularly one one
-    void ColorCreature(CreatureGenerator_08_NNs creature)
+    void ColorCreature(Creatures02_CreatureGenerator_Behavioural_NN creature)
     {
         Color gold = new Color(1f, 0.84f, 0f); // gold color
 
@@ -505,7 +505,7 @@ public class PopulationController_08_NNs : MonoBehaviour
 
 
     // function to avoid collisions between creatures
-    void IgnoreCollisionsBetweenCreatures(CreatureGenerator_08_NNs a, CreatureGenerator_08_NNs b)
+    void IgnoreCollisionsBetweenCreatures(Creatures02_CreatureGenerator_Behavioural_NN a, Creatures02_CreatureGenerator_Behavioural_NN b)
     {
         // Get all colliders of creature a
         List<Collider> collidersA = new List<Collider>();

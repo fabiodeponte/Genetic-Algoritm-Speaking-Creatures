@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
-public class CreatureGenerator_08_NNs
+public class Creatures02_CreatureGenerator_Behavioural_NN
 {
 
     // =========== DECLARATION OF VARIABLES AND OBJECTS NEEDED IN THE METHODS ===========
@@ -74,7 +74,7 @@ public class CreatureGenerator_08_NNs
 
     public float[] lastOutputsOfTheSingleExperiment;
 
-    public CreatureGenerator_08_NNs(Vector3 spawnPos, List<object> genome)
+    public Creatures02_CreatureGenerator_Behavioural_NN(Vector3 spawnPos, List<object> genome)
     {
         gravity = 1;
         //phaseOffset = 0;
@@ -255,12 +255,12 @@ public class CreatureGenerator_08_NNs
 
         for (int i=0; i < outputs.Length; i=i+2) // force: neurons 0, 2, 4, 6
         {
-            expanded_outputs[i] = LightSensor_08_NNs_new.ExpandToRange(outputs[i], PopulationController_08_NNs.min_force, PopulationController_08_NNs.max_force);
+            expanded_outputs[i] = LightSensor_08_NNs_new.ExpandToRange(outputs[i], Creatures02_PopulationManager_Behavioural_NN.min_force, Creatures02_PopulationManager_Behavioural_NN.max_force);
         }
 
         for (int i=1; i < outputs.Length; i=i+2) // speed: neurons 1, 3, 5, 7
         {
-            expanded_outputs[i] = LightSensor_08_NNs_new.ExpandToRange(outputs[i], PopulationController_08_NNs.min_speed, PopulationController_08_NNs.max_speed);
+            expanded_outputs[i] = LightSensor_08_NNs_new.ExpandToRange(outputs[i], Creatures02_PopulationManager_Behavioural_NN.min_speed, Creatures02_PopulationManager_Behavioural_NN.max_speed);
         }
 
         lastOutputsOfTheSingleExperiment = expanded_outputs;
