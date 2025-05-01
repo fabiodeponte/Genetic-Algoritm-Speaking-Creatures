@@ -571,7 +571,7 @@ public class NeuralNetwork
                 else
                 {
                     // Hidden layers: use Sigmoid
-                    next[n] = Sigmoid(sum);
+                    next[n] = Tanh(sum);
 
 
                 }

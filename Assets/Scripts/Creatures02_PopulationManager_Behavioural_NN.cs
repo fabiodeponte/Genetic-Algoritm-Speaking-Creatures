@@ -717,7 +717,7 @@ public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
 
 
 
-
+/*
     public float[][][] WeightsInitialization()
     {
         float[][][] weights2return = new float[][][]
@@ -755,6 +755,27 @@ public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
                     new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f),
                                 Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f) }
                 }
+            };
+        return weights2return;
+    }
+*/
+
+    public float[][][] WeightsInitialization()
+    {
+        float[][][] weights2return = new float[][][]
+            {
+                // Input layer to hidden layer (2 → 8)
+                new float[][]
+                {
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
+                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) }
+                },
             };
         return weights2return;
     }
