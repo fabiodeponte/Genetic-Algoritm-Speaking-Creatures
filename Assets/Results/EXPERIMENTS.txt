@@ -1,0 +1,48 @@
+EXPERIMENTS
+
+
+-1-
+=== configuration ===
+100 agents - ducks
+Network 2,8,8
+Sigmoid activation for all hidden layers
+ReLU on FORCE outputs 0, 2, 4, 6
+Tanh on SPEED outputs 1, 3, 5, 7
+
+=== results ===
+After about 2,000 generations no appreciable result
+
+
+
+-2-
+=== configuration ===
+100 agents - ducks
+Network 2,8,8
+Sigmoid activation for all hidden layers
+Tanh on FORCE outputs 0, 2, 4, 6
+Tanh on SPEED outputs 1, 3, 5, 7
+
+=== results ===
+After about 2,000 generations no appreciable result
+
+
+
+-3-
+=== configuration ===
+100 agents - ducks
+Network 2,8,8
+Tanh activation for neurons on all layers
+
+=== results ===
+After about 8,000 generations no appreciable result
+
+
+
+-4-
+=== configuration ===
+100 agents - ducks
+Network 2,8
+Tanh activation for neurons on all layers
+
+=== results ===
+After about 6,000 generations no appreciable result

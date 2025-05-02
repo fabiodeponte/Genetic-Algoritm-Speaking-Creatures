@@ -1,0 +1,37 @@
+DUCKS
+
+Generation: 299 - Winner: 1 - Distance: 60.94431 - GENOME:: force: 207.6744 | speed: 93.91657 | limitsHipMin: -55.10178 | limitsHipMax: 31.81556 | limitsKneeMin: -48.17958 | limitsKneeMax: 0 | bodySize: (2.44, 2.54, 1.44) | positionLeg1: (-1.40, 0.00, -0.36) | positionLeg2: (1.01, 0.00, -0.56) | positionLeg3: (-0.82, 0.00, 0.54) | positionLeg4: (0.49, 0.00, 0.48) | bodyCenterOfMass: (-0.07, -0.02, 0.00) | upperLen: 2.034411 | upperWidth: 0.2498355 | upperDepth: 0.3001766 | lowerLen: 0.1985095 | lowerWidth: 0.826129 | lowerDepth: 1.297097 | bodyMass: 1.468854
+
+Generation: 300 - Winner: 0 - Distance: 57.10799 - GENOME:: force: 207.6744 | speed: 93.91657 | limitsHipMin: -55.10178 | limitsHipMax: 31.81556 | limitsKneeMin: -48.17958 | limitsKneeMax: 0 | bodySize: (2.44, 2.54, 1.44) | positionLeg1: (-1.40, 0.00, -0.36) | positionLeg2: (1.01, 0.00, -0.56) | positionLeg3: (-0.82, 0.00, 0.54) | positionLeg4: (0.49, 0.00, 0.48) | bodyCenterOfMass: (-0.07, -0.02, 0.00) | upperLen: 2.034411 | upperWidth: 0.2498355 | upperDepth: 0.3001766 | lowerLen: 0.1985095 | lowerWidth: 0.826129 | lowerDepth: 1.297097 | bodyMass: 1.468854
+
+
+BISON
+
+After this size, the bisons are too close and they explode at each generation, so they fall off the platform and the distance skyrockets:
+
+Generation: 177 - Winner: 0 - Distance: 80.69057 - GENOME:: force: 304.3004 | speed: 113.6859 | limitsHipMin: -45.15137 | limitsHipMax: 37.58433 | limitsKneeMin: -67.44538 | limitsKneeMax: 0 | bodySize: (5.24, 2.52, 2.59) | positionLeg1: (-0.63, 0.00, -0.73) | positionLeg2: (0.76, 0.00, -0.62) | positionLeg3: (-0.65, 0.00, 0.92) | positionLeg4: (0.74, 0.00, 0.68) | bodyCenterOfMass: (0.09, 0.05, 0.17) | upperLen: 2.790962 | upperWidth: 0.7968422 | upperDepth: 0.3585646 | lowerLen: 0.09821696 | lowerWidth: 0.3150967 | lowerDepth: 0.7176875 | bodyMass: 1.764475
+
+At generation 300, we are here:
+
+Generation: 300 - Winner: 15 - Distance: 2333.596 - GENOME:: force: 362.2338 | speed: 91.0325 | limitsHipMin: -40.46446 | limitsHipMax: 24.29377 | limitsKneeMin: -57.38909 | limitsKneeMax: 0 | bodySize: (8.45, 4.23, 2.52) | positionLeg1: (-0.50, 0.00, -0.50) | positionLeg2: (0.69, 0.00, -0.42) | positionLeg3: (-1.18, 0.00, 0.88) | positionLeg4: (0.74, 0.00, 0.58) | bodyCenterOfMass: (0.08, 0.04, 0.20) | upperLen: 3.706598 | upperWidth: 0.8054881 | upperDepth: 0.3153645 | lowerLen: 0.0628384 | lowerWidth: 0.3390294 | lowerDepth: 0.6768152 | bodyMass: 1.310901
+
+
+NOTES:
+in both cases, creatures develop feet and a lighter body mass. In the case of the bisons, though, the size of the body is large, while ducks develop a smaller body size.
+
+
+
+BIRD 2 LEGS
+Generation: 585 - Winner: 1 - Distance: 118.069 - GENOME:: force: 90.14507 | speed: 101.7776 | limitsHipMin: -27.86115 | limitsHipMax: 17.34673 | limitsKneeMin: -32.16473 | limitsKneeMax: 0 | bodySize: (0.17, 0.47, 1.21) | positionLeg1: (0.00, 0.00, -0.86) | positionLeg2: (0.00, 0.00, 0.76) | positionArm1: (0.00, 1.37, -0.65) | positionArm2: (0.00, 1.01, 1.58) | bodyCenterOfMass: (-0.11, 0.03, -0.05) | upperLen: 1.599983 | upperWidth: 0.2420656 | upperDepth: 1.050677 | lowerLen: 1.099701 | lowerWidth: 0.3855448 | lowerDepth: 2.197017 | bodyMass: 0.5007934
+
+
+
+INSECTS 4 LEGS (photos refer to generation 2700, where they explode)
+
+Generation: 713 - Winner: 12 - Distance: 72.37324 - GENOME:: force: 144.7964 | speed: 171.1907 | limitsHipMin: -28.37243 | limitsHipMax: 59.63264 | limitsKneeMin: -72.76945 | limitsKneeMax: 0 | bodySize: (4.45, 1.07, 2.77) | positionLeg1: (-0.72, 0.00, -1.07) | positionLeg2: (0.89, 0.00, -0.67) | positionLeg3: (-0.79, 0.00, 0.31) | positionLeg4: (0.26, 0.00, 0.66) | bodyCenterOfMass: (-0.04, -0.18, 0.06) | upperLen: 1.741453 | upperWidth: 0.4146942 | upperDepth: 1.263755 | lowerLen: 0.8547196 | lowerWidth: 0.5039697 | lowerDepth: 0.1444479 | bodyMass: 0.9835867
+
+Generation: 853 - Winner: 5 - Distance: 130.8194 - GENOME:: force: 161.5651 | speed: 200.8626 | limitsHipMin: -30.16429 | limitsHipMax: 53.61658 | limitsKneeMin: -73.16537 | limitsKneeMax: 0 | bodySize: (6.33, 0.60, 3.24) | positionLeg1: (-0.80, 0.00, -0.99) | positionLeg2: (0.75, 0.00, -0.94) | positionLeg3: (-0.77, 0.00, 0.48) | positionLeg4: (0.16, 0.00, 0.73) | bodyCenterOfMass: (-0.03, -0.13, 0.06) | upperLen: 4.029487 | upperWidth: 0.50566 | upperDepth: 1.51613 | lowerLen: 0.8920193 | lowerWidth: 0.3546988 | lowerDepth: 0.1299367 | bodyMass: 0.7242252
+
+Generation: 1500 - Winner: 5 - Distance: 7.778737E+15 - GENOME:: force: 159.8491 | speed: 74.08461 | limitsHipMin: -14.30097 | limitsHipMax: 9.05621 | limitsKneeMin: -65.33143 | limitsKneeMax: 0 | bodySize: (13.72, 0.20, 1.36) | positionLeg1: (-0.54, 0.00, -0.72) | positionLeg2: (1.96, 0.00, -0.64) | positionLeg3: (-3.27, 0.00, 0.44) | positionLeg4: (0.17, 0.00, 0.41) | bodyCenterOfMass: (-0.02, -0.21, 0.12) | upperLen: 2.210491 | upperWidth: 0.3828156 | upperDepth: 0.7657632 | lowerLen: 0.6603064 | lowerWidth: 0.4221073 | lowerDepth: 0.1536982 | bodyMass: 0.1077927
+
+Generation: 2700 - Winner: 19 - Distance: 2.273568E+16 - GENOME:: force: 58.53562 | speed: 22.14372 | limitsHipMin: -4.498312 | limitsHipMax: 3.02033 | limitsKneeMin: -18.21725 | limitsKneeMax: 0 | bodySize: (5.41, 0.11, 0.20) | positionLeg1: (-0.20, 0.00, -0.58) | positionLeg2: (10.02, 0.00, -0.33) | positionLeg3: (-1.29, 0.00, 0.13) | positionLeg4: (0.69, 0.00, 0.05) | bodyCenterOfMass: (-0.01, -0.02, 0.07) | upperLen: 0.2677372 | upperWidth: 0.1214893 | upperDepth: 0.3449826 | lowerLen: 0.6414126 | lowerWidth: 0.03772715 | lowerDepth: 0.03912784 | bodyMass: 0.06885628

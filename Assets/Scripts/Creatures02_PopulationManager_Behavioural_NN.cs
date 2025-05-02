@@ -15,7 +15,7 @@ using NUnit.Framework.Constraints;
 public class GeneralConfigurationParameters
 {
     // GENERAL PARAMETERS
-    public static int populationSize = 100;     // size of the population
+    public static int populationSize = 20;     // size of the population
     public static float evaluationTime = 10f;   // 30 seconds per generation
     public static float timeScale = 5f;         // accelerates time x10 
 
@@ -624,7 +624,7 @@ public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
         bodyMass = Random.Range(3f, 5f); // default was: 4f;
 
         // weight of the neural network
-        float[][][] weights2save = WeightsInitialization();
+        float[][][] weights2save = WeightsInitialization(new int[] {2, 8});
         genomeNN = new Genome();
         genomeNN.SaveWeights(weights2save);
     }
@@ -760,25 +760,39 @@ public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
     }
 */
 
-    public float[][][] WeightsInitialization()
+
+public float[][][] WeightsInitialization(int[] layerSizes = null)
+{
+
+    if (layerSizes == null)
     {
-        float[][][] weights2return = new float[][][]
-            {
-                // Input layer to hidden layer (2 → 8)
-                new float[][]
-                {
-                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
-                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
-                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
-                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
-                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
-                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
-                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) },
-                    new float[] { Random.Range(0f, 1f), Random.Range(0f, 1f) }
-                },
-            };
-        return weights2return;
+        layerSizes = new int[] { 2, 8, 8 };
     }
+
+    List<float[][]> weightsList = new List<float[][]>();
+
+    for (int i = 0; i < layerSizes.Length - 1; i++)
+    {
+        int inputSize = layerSizes[i];
+        int outputSize = layerSizes[i + 1];
+
+        float[][] layerWeights = new float[outputSize][];
+
+        for (int j = 0; j < outputSize; j++)
+        {
+            layerWeights[j] = new float[inputSize];
+            for (int k = 0; k < inputSize; k++)
+            {
+                layerWeights[j][k] = Random.Range(0f, 1f);
+            }
+        }
+
+        weightsList.Add(layerWeights);
+    }
+
+    return weightsList.ToArray();
+}
+
 
 
     public void CreateLight(Color newColor, float newIntensity, float newRange, Vector3 newPosition)
