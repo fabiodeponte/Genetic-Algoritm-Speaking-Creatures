@@ -1,7 +1,13 @@
 /*
-DA FARE: per qualche motivo non si muovono più. pubblica a video il valore degli output della rete neurale del vincente
-alla fine di ogni generazione, così da vedere cosa arriva effettivamente ai motori.
+TO DO:
+- add a parameter to set fitness function: distance or light? (do ducks actually move if have distance and not light fitness function?)
+- light should move 4/5 times during the time allowed to agents
+- add a number of generations limit and a function to write the results of the experiment to file
 
+OTHER:
+- check if Simsulator actually works with light-following fitness function
+- rewrite the whole program to fit Karl Sims scheme?
+- Google Deepmind: how does their competing teams agents work?
 */
 
 
@@ -52,6 +58,13 @@ public class GeneralConfigurationParameters
 
     // STOP PHYSICAL MUTATION
     public static bool freezePhysicalEvolution = true; // stop mutation of the physical genome (still does crossover)
+
+    // NEURAL NETWORK ARCHITECTURE
+    // weights: can be any shape: 2,4,8 or 2,2,6,8 - whatever provided that begins with 2 inputs (distance and angle from light) and ends with 8 outputs (force and speed for the 4 legs)
+    public static int[] neuralNetorkArchitecture = new int[] {2, 8}; // 2 inputs, 8 outputs
+    // activation functions: Tanh, ReLU, Sigmoid
+    public static string hiddenActivation = "Tanh";
+    public static string outputActivation = "Sigmoid";
 
     // INITIAL DISPOSITION OF THE AGENTS ON THE GROUND
     public static Vector3 ComputePosition(int i)
@@ -624,7 +637,7 @@ public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
         bodyMass = Random.Range(3f, 5f); // default was: 4f;
 
         // weight of the neural network
-        float[][][] weights2save = WeightsInitialization(new int[] {2, 8});
+        float[][][] weights2save = WeightsInitialization(GeneralConfigurationParameters.neuralNetorkArchitecture);
         genomeNN = new Genome();
         genomeNN.SaveWeights(weights2save);
     }
@@ -653,7 +666,7 @@ public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
                 bodyMass = 0.9835867f;
 
                 // weight of the neural network
-                float[][][] weights2save = WeightsInitialization();
+                float[][][] weights2save = WeightsInitialization(GeneralConfigurationParameters.neuralNetorkArchitecture);
                 genomeNN = new Genome();
                 genomeNN.SaveWeights(weights2save);
     }
@@ -681,7 +694,7 @@ public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
                 bodyMass = 1.764475f;
 
                 // weight of the neural network
-                float[][][] weights2save = WeightsInitialization();
+                float[][][] weights2save = WeightsInitialization(GeneralConfigurationParameters.neuralNetorkArchitecture);
                 genomeNN = new Genome();
                 genomeNN.SaveWeights(weights2save);
     }
@@ -710,11 +723,43 @@ public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
                 bodyMass =  1.468854f;
 
                 // weight of the neural network
-                float[][][] weights2save = WeightsInitialization();
+                float[][][] weights2save = WeightsInitialization(GeneralConfigurationParameters.neuralNetorkArchitecture);
                 genomeNN = new Genome();
                 genomeNN.SaveWeights(weights2save);
     }
 
+
+
+public float[][][] WeightsInitialization(int[] layerSizes = null)
+{
+    if (layerSizes == null)
+    {
+        layerSizes = new int[] { 2, 8, 8 };
+    }
+
+    List<float[][]> weightsList = new List<float[][]>();
+
+    for (int i = 0; i < layerSizes.Length - 1; i++)
+    {
+        int inputSize = layerSizes[i];
+        int outputSize = layerSizes[i + 1];
+
+        float[][] layerWeights = new float[outputSize][];
+
+        for (int j = 0; j < outputSize; j++)
+        {
+            layerWeights[j] = new float[inputSize];
+            for (int k = 0; k < inputSize; k++)
+            {
+                layerWeights[j][k] = Random.Range(0f, 1f);
+            }
+        }
+
+        weightsList.Add(layerWeights);
+    }
+
+    return weightsList.ToArray();
+}
 
 
 /*
@@ -759,40 +804,6 @@ public class Creatures02_PopulationManager_Behavioural_NN : MonoBehaviour
         return weights2return;
     }
 */
-
-
-public float[][][] WeightsInitialization(int[] layerSizes = null)
-{
-
-    if (layerSizes == null)
-    {
-        layerSizes = new int[] { 2, 8, 8 };
-    }
-
-    List<float[][]> weightsList = new List<float[][]>();
-
-    for (int i = 0; i < layerSizes.Length - 1; i++)
-    {
-        int inputSize = layerSizes[i];
-        int outputSize = layerSizes[i + 1];
-
-        float[][] layerWeights = new float[outputSize][];
-
-        for (int j = 0; j < outputSize; j++)
-        {
-            layerWeights[j] = new float[inputSize];
-            for (int k = 0; k < inputSize; k++)
-            {
-                layerWeights[j][k] = Random.Range(0f, 1f);
-            }
-        }
-
-        weightsList.Add(layerWeights);
-    }
-
-    return weightsList.ToArray();
-}
-
 
 
     public void CreateLight(Color newColor, float newIntensity, float newRange, Vector3 newPosition)

@@ -248,7 +248,7 @@ public class Creatures02_CreatureGenerator_Behavioural_NN
         inputs[0] = normalized_distance;
         inputs[1] = normalized_angle;
 
-        float[] outputs = nn.FeedForward(inputs); // apply the neural network
+        float[] outputs = nn.FeedForward(inputs, GeneralConfigurationParameters.hiddenActivation, GeneralConfigurationParameters.outputActivation); // apply the neural network
         float[] expanded_outputs = outputs;
 
         // we expand now the output for force and speed from the range [0,1] to the range [min_force, max_force] and [min_speed, max_speed] respectively
@@ -541,7 +541,7 @@ public class NeuralNetwork
 // - Sigmoid activation for all hidden layers
 // - ReLU on FORCE outputs 0, 2, 4, 6
 // - Tanh on SPEED outputs 1, 3, 5, 7
-    public float[] FeedForward(float[] inputs)
+    public float[] FeedForward(float[] inputs, string hiddenActivation, string outputActivation)
     {
         float[] current = inputs;
 
@@ -561,17 +561,26 @@ public class NeuralNetwork
 
                 if (isOutputLayer)
                 {
+                    // Output layer
+                    if (outputActivation == "Tanh") next[n] = Tanh(sum);
+                    if (outputActivation == "ReLU") next[n] = ReLU(sum);
+                    if (outputActivation == "Sigmoid") next[n] = Sigmoid(sum);
+
                     // Output layer: use ReLU for even indices (force), Tanh for odd (speed)
+                    /*
                     if (n % 2 == 0)
                         // next[n] = ReLU(sum);
                         next[n] = Tanh(sum);
                     else
                         next[n] = Tanh(sum);
+                    */
                 }
                 else
                 {
-                    // Hidden layers: use Sigmoid
-                    next[n] = Tanh(sum);
+                    // Hidden layers
+                    if (hiddenActivation == "Tanh") next[n] = Tanh(sum);
+                    if (hiddenActivation == "ReLU") next[n] = ReLU(sum);
+                    if (hiddenActivation == "Sigmoid") next[n] = Sigmoid(sum);
 
 
                 }
@@ -584,33 +593,6 @@ public class NeuralNetwork
     }
 
 
-/*
-    public float[] FeedForward(float[] inputs)
-    {
-        float[] current = inputs;
-
-        for (int layer = 0; layer < weights.Length; layer++)
-        {
-            int numNeurons = weights[layer].Length;
-            float[] next = new float[numNeurons];
-
-            for (int n = 0; n < numNeurons; n++)
-            {
-                float sum = 0f;
-                for (int i = 0; i < weights[layer][n].Length; i++)
-                {
-                    sum += current[i] * weights[layer][n][i];
-                }
-
-                next[n] = Tanh(sum);
-            }
-
-            current = next;
-        }
-
-        return current;
-    }
-*/
 
     private float Sigmoid(float x)
     {
@@ -630,20 +612,5 @@ public class NeuralNetwork
     }
 
 
-/*
-    public static float[][][] MutateNetworkWeights(float[][][] weights, float mutationRangeMin = -0.1f, float mutationRangeMax = 0.1f)
-    {
-        for (int layer = 0; layer < weights.Length; layer++)
-        {
-            for (int neuron = 0; neuron < weights[layer].Length; neuron++)
-            {
-                for (int input = 0; input < weights[layer][neuron].Length; input++)
-                {
-                    weights[layer][neuron][input] += Random.Range(mutationRangeMin, mutationRangeMax);
-                }
-            }
-        }
-        return weights;
-    }
-*/
+
 }
